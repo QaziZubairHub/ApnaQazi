@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidOrderCreate() {
+      return request.resource.data.keys().hasAll(['customerName', 'customerEmail', 'customerPhone', 'deliveryAddress', 'totalAmount', 'orderStatus', 'paymentMethod', 'orderItems'])
+        && request.resource.data.customerName is string
+        && request.resource.data.customerName.size() > 0
+        && request.resource.data.customerEmail is string
+        && request.resource.data.customerEmail.size() > 0
+        && request.resource.data.customerPhone is string
+        && request.resource.data.customerPhone.size() > 0
+        && request.resource.data.deliveryAddress is string
+        && request.resource.data.deliveryAddress.size() > 0
+        && request.resource.data.totalAmount is number
+        && request.resource.data.totalAmount >= 0
+        && request.resource.data.orderStatus is string
+        && request.resource.data.paymentMethod is string
+        && request.resource.data.orderItems is list
+        && request.resource.data.orderItems.size() > 0;
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdmin();
+      allow create: if isValidOrderCreate() && (!isSignedIn() || (isSignedIn() && request.resource.data.customerUid == request.auth.uid && request.resource.data.userId == request.auth.uid));
+      allow update: if isAdmin() || (isSignedIn() && (resource.data.customerUid == request.auth.uid || resource.data.userId == request.auth.uid));
+      allow delete: if false;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if false;
+    }
+
+    match /users/{userId}/orders/{orderId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /customers/{customerId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}

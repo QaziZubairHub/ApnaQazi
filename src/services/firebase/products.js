@@ -1,0 +1,220 @@
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  orderBy,
+  where,
+  limit,
+  startAfter,
+  writeBatch,
+  deleteDoc,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+
+import { db } from "../../../src/firebase";
+
+import { getDownloadURL, getStorage, ref as storageRef } from "firebase/storage";
+
+const PRODUCTS_COL = "products";
+const CATEGORIES_COL = "categories";
+const BRANDS_COL = "brands";
+const COLLECTIONS_COL = "collections";
+
+const toDate = (v) => {
+  if (!v) return null;
+  if (v?.toDate) return v.toDate();
+  if (typeof v === "string") {
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (v instanceof Date) return v;
+  return null;
+};
+
+export const subscribeProducts = (onData, { orderField = "createdAt" } = {}) => {
+  const q = query(collection(db, PRODUCTS_COL), orderBy(orderField, "desc"));
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    onData(data);
+  });
+};
+
+export const fetchProductsPage = async ({
+  pageSize,
+  cursor,
+  orderField = "createdAt",
+  orderDir = "desc",
+  filters = {},
+}) => {
+  const base = query(collection(db, PRODUCTS_COL), orderBy(orderField, orderDir));
+  let q = base;
+  if (cursor) {
+    q = query(collection(db, PRODUCTS_COL), orderBy(orderField, orderDir), startAfter(cursor));
+  }
+  q = query(q, limit(pageSize));
+
+  const snap = await getDocs(q);
+  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  const {
+    searchText,
+    categoryId,
+    brandId,
+    collectionId,
+    status,
+    featured,
+    stock,
+    priceMin,
+    priceMax,
+    dateFrom,
+    dateTo,
+  } = filters;
+
+  const qText = (searchText || "").trim().toLowerCase();
+  const filtered = docs.filter((p) => {
+    if (status && status !== "all" && p.status !== status) return false;
+    if (featured === true && p.featured !== true) return false;
+    if (categoryId && categoryId !== "all" && p.categoryId !== categoryId) return false;
+    if (brandId && brandId !== "all" && p.brandId !== brandId) return false;
+    if (collectionId && collectionId !== "all" && p.collectionId !== collectionId) return false;
+
+    const price = Number(p.price ?? 0);
+    if (priceMin != null && !Number.isNaN(priceMin) && price < Number(priceMin)) return false;
+    if (priceMax != null && !Number.isNaN(priceMax) && price > Number(priceMax)) return false;
+
+    if (dateFrom || dateTo) {
+      const d = toDate(p.createdAt);
+      if (!d) return false;
+      if (dateFrom && d < dateFrom) return false;
+      if (dateTo && d > dateTo) return false;
+    }
+
+    if (qText) {
+      const hay = [p.name, p.slug, p.sku, p.barcode, p.sellingPrice?.toString?.(), p.costPrice?.toString?.()]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!hay.includes(qText)) return false;
+    }
+
+    if (stock && stock !== "all") {
+      const qty = Number(p.stockQuantity ?? p.stock?.quantity ?? 0);
+      const lowT = Number(p.lowStockThreshold ?? p.stock?.lowStockThreshold ?? 5);
+      if (stock === "out" && qty > 0) return false;
+      if (stock === "in" && qty <= 0) return false;
+      if (stock === "low" && !(qty > 0 && qty <= lowT)) return false;
+    }
+
+    return true;
+  });
+
+  const nextCursor = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].get(orderField) : null;
+  const totalCount = null;
+
+  return { items: filtered, nextCursor, totalCount };
+};
+
+export const fetchCollections = async (colName, { whereField = null, whereOp = null, whereValue = null } = {}) => {
+  let q = query(collection(db, colName));
+  if (whereField) {
+    q = query(collection(db, colName), where(whereField, whereOp, whereValue));
+  }
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
+export const subscribeCollections = (
+  colName,
+  onData,
+  { whereField = null, whereOp = null, whereValue = null } = {}
+) => {
+  let q = query(collection(db, colName));
+  if (whereField) {
+    q = query(collection(db, colName), where(whereField, whereOp, whereValue));
+  }
+  return onSnapshot(q, (snap) => {
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    onData(items);
+  });
+};
+
+export const subscribeDistinctProductStatuses = (onData) => {
+  // Derive distinct values from the live products stream.
+  // Note: This is O(n) client-side per snapshot; for large catalogs consider an aggregate doc.
+  const q = query(collection(db, PRODUCTS_COL));
+  return onSnapshot(q, (snap) => {
+    const set = new Set();
+    snap.docs.forEach((d) => {
+      const v = d.data()?.status;
+      if (typeof v === "string" && v.trim()) set.add(v.trim());
+    });
+    const statuses = Array.from(set).sort((a, b) => a.localeCompare(b));
+    onData(statuses);
+  });
+};
+
+const classifyStockBucket = (qtyRaw, lowTRaw) => {
+  const qty = Number(qtyRaw ?? 0);
+  const lowT = Number(lowTRaw ?? 5);
+  if (qty === 0) return "out";
+  if (qty > 0 && qty <= lowT) return "low";
+  if (qty > lowT) return "in";
+  return null;
+};
+
+export const subscribeDistinctStockStatuses = (onData) => {
+  // Derive distinct stock buckets from live products.
+  const q = query(collection(db, PRODUCTS_COL));
+  return onSnapshot(q, (snap) => {
+    const buckets = new Set();
+    snap.docs.forEach((d) => {
+      const data = d.data() || {};
+      const qty = data.stockQuantity ?? data.stock?.quantity ?? 0;
+      const lowT = data.lowStockThreshold ?? data.stock?.lowStockThreshold ?? 5;
+      const bucket = classifyStockBucket(qty, lowT);
+      if (bucket) buckets.add(bucket);
+    });
+
+    const order = ["in", "low", "out"];
+    const result = order.filter((x) => buckets.has(x));
+    onData(result);
+  });
+};
+
+export const bulkUpdateProducts = async (ids, patch) => {
+  if (!ids?.length) return;
+  const batch = writeBatch(db);
+  ids.forEach((id) => {
+    batch.update(doc(db, PRODUCTS_COL, id), { ...patch, updatedAt: new Date().toISOString() });
+  });
+  await batch.commit();
+};
+
+export const bulkDeleteProducts = async (ids) => {
+  if (!ids?.length) return;
+  await Promise.all(ids.map((id) => deleteDoc(doc(db, PRODUCTS_COL, id))));
+};
+
+export const duplicateProduct = async (id) => {
+  const snap = await getDoc(doc(db, PRODUCTS_COL, id));
+  if (!snap.exists()) throw new Error("Product not found");
+  const data = snap.data();
+  const now = new Date().toISOString();
+  const payload = { ...data, createdAt: now, updatedAt: now };
+  const ref = doc(collection(db, PRODUCTS_COL));
+  await setDoc(ref, payload);
+  return { id: ref.id };
+};
+
+export const updateProduct = async (id, patch) => {
+  await updateDoc(doc(db, PRODUCTS_COL, id), { ...patch, updatedAt: new Date().toISOString() });
+};
+
+export const deleteProduct = async (id) => {
+  await deleteDoc(doc(db, PRODUCTS_COL, id));
+};
+
