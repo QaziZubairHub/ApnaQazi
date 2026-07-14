@@ -10,7 +10,7 @@ const menus = [
     { label: 'Home', href: '/' },
     { label: 'Product', href: '/product' },
     { label: 'Category', href: '/category' },
-    { label: 'Contact us', href: '/contact-us' },
+    { label: 'Contact us', href: '/Contact us' },
 ];
 
 const contactItems = [
@@ -26,56 +26,49 @@ const socialLinks = [
     { label: 'YouTube', href: '#', icon: 'ri-youtube-fill', hoverClass: 'hover:bg-red-600' },
 ];
 
+const trustBadges = [
+    { icon: 'ri-shield-check-line', text: 'Secure Checkout' },
+    { icon: 'ri-truck-line', text: 'Free Delivery' },
+    { icon: 'ri-refresh-line', text: 'Easy Returns' },
+    { icon: 'ri-customer-service-2-line', text: '24/7 Support' },
+];
+
 const Layout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isHeaderSolid, setIsHeaderSolid] = useState(false);
+    const location = useLocation();
 
     useEffect(() => {
-        const header = document.querySelector('[data-header]');
-        const headerInner = document.querySelector('[data-header-inner]');
+        const isHomePage = location.pathname === '/';
 
-        if (!header || !headerInner) return;
-
-        const setDesktopTransparent = () => {
-            header.classList.remove('bg-white/95');
-            header.classList.add('bg-transparent');
-            header.classList.remove('shadow-sm');
-            // Ensure no semi-opaque background is visible initially on desktop
-            header.classList.remove('bg-white/90', 'bg-white/80', 'bg-white/70', 'bg-white/60', 'bg-white/50');
-        };
-
-        const setDesktopSolid = () => {
-            header.classList.add('bg-white/95');
-            header.classList.remove('bg-transparent');
-            header.classList.add('shadow-sm');
-        };
-
-        const apply = () => {
+        const handleHeaderStyle = () => {
             const isDesktop = window.innerWidth >= 1024;
             if (!isDesktop) {
-                // Mobile/Tablet: keep exactly as existing UI (no sticky background behavior)
-                setDesktopTransparent();
+                setIsHeaderSolid(false);
                 return;
             }
 
-            // Transparent initially; switch smoothly to solid on scroll
-            if (window.scrollY > 8) setDesktopSolid();
-            else setDesktopTransparent();
+            if (isHomePage) {
+                setIsHeaderSolid(window.scrollY > 40);
+            } else {
+                setIsHeaderSolid(true);
+            }
         };
 
-        // Ensure overlay behavior from first load on desktop.
-        // Also prevents any brief flash while React mounts.
-        if (window.innerWidth >= 1024) setDesktopTransparent();
+        handleHeaderStyle();
 
-        apply();
+        window.addEventListener('scroll', handleHeaderStyle, { passive: true });
+        window.addEventListener('resize', handleHeaderStyle, { passive: true });
 
-        window.addEventListener('scroll', apply, { passive: true });
-        return () => window.removeEventListener('scroll', apply);
-    }, []);
+        return () => {
+            window.removeEventListener('scroll', handleHeaderStyle);
+            window.removeEventListener('resize', handleHeaderStyle);
+        };
+    }, [location.pathname]);
 
     const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-    const location = useLocation();
     const closeMobileMenu = () => setIsMenuOpen(false);
     const { itemCount, subtotal } = useCart();
 
@@ -85,23 +78,24 @@ const Layout = ({ children }) => {
             {/* =========== PREMIUM ANNOUNCEMENT BAR =========== */}
             <div className="bg-slate-900 text-slate-300 w-full relative z-50">
                 <div className="w-full mx-auto flex items-center justify-center h-10 px-4 overflow-hidden">
-                    <div className="marquee text-[11px] font-medium tracking-[0.2em] uppercase whitespace-nowrap text-center">
-                        CHEAP & BEST - APNA QAZI &nbsp;&bull;&nbsp; FREE DELIVERY ON ORDERS PKR 10,000+ IN KARACHI &nbsp;&bull;&nbsp; EXCLUSIVE NEW ARRIVALS
+                    <div className="marquee text-[11px] font-semibold tracking-[0.2em] uppercase whitespace-nowrap text-center">
+                        <span className="text-[#c79864]">★</span> CHEAP & BEST — APNA QAZI <span className="text-[#c79864]">★</span> FREE DELIVERY ON ORDERS PKR 10,000+ IN KARACHI <span className="text-[#c79864]">★</span> EXCLUSIVE NEW ARRIVALS <span className="text-[#c79864]">★</span>
                     </div>
                 </div>
                 <style>
-                    {`@keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } } .marquee { display: inline-block; white-space: nowrap; animation: marquee 25s linear infinite; }`}
+                    {`@keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } } .marquee { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }`}
                 </style>
             </div>
 
             {/* =========== MAIN NAVBAR (Glassmorphism) =========== */}
             <nav
-                className="lg:sticky top-0 left-0 z-40 border-b border-gray-200/50 bg-transparent backdrop-blur-xl transition-colors duration-400 shadow-none"
-                data-header
+                className={`lg:sticky top-0 left-0 w-full z-40 transition-all duration-300 ease-in-out ${
+                    isHeaderSolid
+                        ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
+                        : 'bg-white/80 backdrop-blur-md border-b border-transparent'
+                }`}
             >
-                <div className="max-w-[1400px] mx-auto flex items-center justify-between py-4 px-4 lg:px-10 relative h-[72px]" data-header-inner>
-
-
+                <div className="max-w-[1400px] mx-auto flex items-center justify-between py-4 px-4 lg:px-10 relative h-[72px]">
                     {/* --- 1. LEFT: Hamburger & Desktop Links --- */}
                     <div className="flex-1 flex justify-start items-center gap-8">
                         <button
@@ -121,7 +115,7 @@ const Layout = ({ children }) => {
                                         }`}
                                     >
                                         {item.label}
-                                        <span className={`absolute bottom-0 left-0 h-[2px] bg-slate-900 transition-all duration-300 ease-out ${
+                                        <span className={`absolute bottom-0 left-0 h-[2px] bg-[#c79864] transition-all duration-300 ease-out ${
                                             location.pathname === item.href ? 'w-full' : 'w-0 group-hover:w-full'
                                         }`}></span>
                                     </Link>
@@ -133,7 +127,6 @@ const Layout = ({ children }) => {
                     {/* --- 2. CENTER: Logo --- */}
                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center items-center">
                             <Link to="/" className="transition-transform duration-300 hover:scale-105">
-                                {/* 👇 Yahan sirf dot (.) hataya gaya hai 👇 */}
                                 <img
                                     src="/images/ApnaQazi_Logo_v1.png"
                                     alt="Logo"
@@ -142,19 +135,18 @@ const Layout = ({ children }) => {
                             </Link>
                         </div>
 
-
                     {/* --- 3. RIGHT: Search, UserMenu, Wishlist, Cart --- */}
                     <div className="flex-1 flex justify-end items-center gap-2 md:gap-3">
                         <div className="hidden md:flex items-center">
                             {isSearchOpen ? (
-                                <div className="flex items-center bg-slate-100 rounded-full px-4 h-10 gap-2 w-48 border border-slate-200 focus-within:border-slate-400 transition-all">
+                                <div className="flex items-center bg-slate-100 rounded-full px-4 h-10 gap-2 w-48 border border-slate-200 focus-within:border-[#c79864] transition-all">
                                     <input
                                         type="text"
                                         placeholder="Search..."
                                         className="bg-transparent outline-none w-full text-sm text-slate-700 placeholder-slate-400"
                                         autoFocus
                                     />
-                                    <button onClick={() => setIsSearchOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                    <button onClick={() => setIsSearchOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                                         <i className="ri-close-line"></i>
                                     </button>
                                 </div>
@@ -197,7 +189,7 @@ const Layout = ({ children }) => {
             ></div>
 
             <div className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl z-[101] transform transition-transform duration-300 ease-out flex flex-col lg:hidden ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <img src="/images/ApnaQazi_Logo_v1.png" alt="Logo" className="h-10 object-contain" />
                     <button onClick={closeMobileMenu} className="p-2 rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-slate-900">
                         <i className="ri-close-line text-xl"></i>
@@ -211,9 +203,9 @@ const Layout = ({ children }) => {
                                 <Link
                                     to={item.href}
                                     onClick={closeMobileMenu}
-                                    className={`block py-3 px-4 rounded-lg text-[15px] font-medium tracking-wide transition-colors ${
+                                    className={`block py-3 px-4 rounded-xl text-[15px] font-medium tracking-wide transition-all duration-200 ${
                                         location.pathname === item.href
-                                        ? 'bg-slate-900 text-white'
+                                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
                                         : 'text-slate-700 hover:bg-slate-50'
                                     }`}
                                 >
@@ -223,7 +215,7 @@ const Layout = ({ children }) => {
                         ))}
                     </ul>
 
-                    <div className="mt-8 pt-6 border-t border-slate-100">
+                    <div className="mt-8 pt-6 border-t border-gray-100">
                         <UserMenu onOpenAuth={() => { closeMobileMenu(); setIsAuthOpen(true); }} />
                     </div>
                 </div>
@@ -239,7 +231,23 @@ const Layout = ({ children }) => {
             </main>
 
             {/* =========== FOOTER (Premium Styling) =========== */}
-            <footer className="bg-slate-900 text-slate-300 mt-auto">
+            <footer className="bg-slate-900 text-slate-300 mt-auto relative overflow-hidden">
+                {/* Trust badges strip */}
+                <div className="border-b border-slate-800/60">
+                    <div className="max-w-[1400px] mx-auto px-4 lg:px-10 py-8">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {trustBadges.map((badge, idx) => (
+                                <div key={badge.text} className={`flex items-center gap-3 reveal reveal-delay-${idx + 1}`}>
+                                    <div className="w-11 h-11 rounded-xl bg-[#c79864]/10 flex items-center justify-center text-[#c79864] text-lg flex-shrink-0">
+                                        <i className={badge.icon}></i>
+                                    </div>
+                                    <span className="text-sm font-semibold text-slate-200">{badge.text}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="max-w-[1400px] mx-auto px-4 lg:px-10 py-10 lg:py-16">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
 
@@ -263,13 +271,13 @@ const Layout = ({ children }) => {
                             <ul className="space-y-2.5">
                                 {menus.map((item) => (
                                     <li key={item.href}>
-                                        <Link to={item.href} className="text-sm text-slate-300 leading-relaxed tracking-wide hover:text-white transition-colors duration-200">
+                                        <Link to={item.href} className="text-sm text-slate-300 leading-relaxed tracking-wide hover:text-[#c79864] transition-colors duration-200">
                                             {item.label}
                                         </Link>
                                     </li>
                                 ))}
                                 <li>
-                                    <button onClick={() => setIsAuthOpen(true)} className="text-sm text-slate-300 leading-relaxed tracking-wide hover:text-white transition-colors duration-200">
+                                    <button onClick={() => setIsAuthOpen(true)} className="text-sm text-slate-300 leading-relaxed tracking-wide hover:text-[#c79864] transition-colors duration-200">
                                         Login / Signup
                                     </button>
                                 </li>
@@ -284,7 +292,7 @@ const Layout = ({ children }) => {
                                     <li key={item.label} className="flex items-center gap-3 text-sm text-slate-300 leading-relaxed tracking-wide">
                                         <i className={`${item.icon} w-4 flex-shrink-0 text-slate-500`}></i>
                                         {item.href ? (
-                                            <a href={item.href} className="hover:text-white transition-colors duration-200">{item.label}</a>
+                                            <a href={item.href} className="hover:text-[#c79864] transition-colors duration-200">{item.label}</a>
                                         ) : (
                                             <span>{item.label}</span>
                                         )}
@@ -302,9 +310,9 @@ const Layout = ({ children }) => {
                                     type="email"
                                     placeholder="Your email address"
                                     required
-                                    className="flex-1 bg-slate-800 border border-slate-700 placeholder-slate-500 text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-600 transition-all text-sm tracking-wide"
+                                    className="flex-1 bg-slate-800 border border-slate-700 placeholder-slate-500 text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c79864]/50 transition-all text-sm tracking-wide"
                                 />
-                                <button type="submit" className="bg-white text-slate-900 font-medium px-6 py-3 rounded-lg hover:bg-slate-100 transition-colors duration-200 text-sm tracking-wide">
+                                <button type="submit" className="bg-[#c79864] text-slate-900 font-bold px-6 py-3 rounded-lg hover:bg-[#d4a878] transition-colors duration-200 text-sm tracking-wide shadow-lg shadow-[#c79864]/20">
                                     Subscribe
                                 </button>
                             </form>
@@ -316,7 +324,7 @@ const Layout = ({ children }) => {
                                             key={social.label}
                                             aria-label={social.label}
                                             href={social.href}
-                                            className={`p-2 bg-slate-800 rounded-lg text-white transition-all duration-200 hover:scale-105 ${social.hoverClass}`}
+                                            className={`p-2 bg-slate-800 rounded-lg text-white transition-all duration-200 hover:scale-110 hover:shadow-lg ${social.hoverClass}`}
                                         >
                                             <i className={social.icon}></i>
                                         </a>
