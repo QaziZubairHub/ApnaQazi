@@ -42,12 +42,6 @@ const Layout = ({ children }) => {
         const isHomePage = location.pathname === '/';
 
         const handleHeaderStyle = () => {
-            const isDesktop = window.innerWidth >= 1024;
-            if (!isDesktop) {
-                setIsHeaderSolid(false);
-                return;
-            }
-
             if (isHomePage) {
                 setIsHeaderSolid(window.scrollY > 40);
             } else {
@@ -89,7 +83,7 @@ const Layout = ({ children }) => {
 
             {/* =========== MAIN NAVBAR (Glassmorphism) =========== */}
             <nav
-                className={`lg:sticky top-0 left-0 w-full z-40 transition-all duration-300 ease-in-out ${
+                className={`sticky top-0 left-0 w-full z-40 transition-all duration-300 ease-in-out ${
                     isHeaderSolid
                         ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
                         : 'bg-white/80 backdrop-blur-md border-b border-transparent'
@@ -224,9 +218,7 @@ const Layout = ({ children }) => {
             <LoginRegister isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
             {/* =========== Main Content =========== */}
-            <main className={`flex-1 ${
-                location.pathname === '/' ? 'lg:-mt-[72px]' : ''
-            }`}>
+            <main className={`flex-1 ${location.pathname === '/' ? '-mt-[72px]' : ''}`}>
                 {children}
             </main>
 
