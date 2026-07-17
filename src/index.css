@@ -209,4 +209,9 @@ img, video {
 /* Inter font stacking for Tailwind */
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --color-primary: #5B3DF5;
+  --color-secondary: #06B6D4;
+  --color-accent: #F59E0B;
+  --color-success: #10B981;
+  --color-danger: #EF4444;
 }

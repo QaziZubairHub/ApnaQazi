@@ -10,7 +10,6 @@ import Layout from './components/Admin/Layout'
 import Order from './components/Admin/Orders'
 import Dashboard from './components/Admin/Dashboard'
 import Customers from './components/Admin/Customers'
-import Settings from './components/Admin/Settings'
 import Payment from './components/Admin/Payment'
 import Analytics from './components/Admin/Analytics'
 import CreateInvoice from './components/Admin/CreateInvoice'
@@ -19,6 +18,27 @@ import ProtectedRoute from './components/Admin/ProtectedRoute'
 import LoginRegister from './components/Admin/Login_Register'
 import Preloader from './components/Preloader'
 import CategoryPage from './components/CategoryPage'
+import SettingsLayout from './components/settings/SettingsLayout'
+import General from './pages/Admin/Settings/General'
+import Store from './pages/Admin/Settings/Store'
+import PaymentSettings from './pages/Admin/Settings/Payment'
+import Shipping from './pages/Admin/Settings/Shipping'
+import Email from './pages/Admin/Settings/Email'
+import WhatsApp from './pages/Admin/Settings/WhatsApp'
+import Firebase from './pages/Admin/Settings/Firebase'
+import Notifications from './pages/Admin/Settings/Notifications'
+import Invoice from './pages/Admin/Settings/Invoice'
+import SEO from './pages/Admin/Settings/SEO'
+import Appearance from './pages/Admin/Settings/Appearance'
+import Security from './pages/Admin/Settings/Security'
+import UsersRoles from './pages/Admin/Settings/UsersRoles'
+import AnalyticsSettings from './pages/Admin/Settings/Analytics'
+import BackupRestore from './pages/Admin/Settings/BackupRestore'
+import APISettings from './pages/Admin/Settings/API'
+import ActivityLogs from './pages/Admin/Settings/ActivityLogs'
+import SystemHealth from './pages/Admin/Settings/SystemHealth'
+import Developer from './pages/Admin/Settings/Developer'
+import SettingsIndex from './pages/Admin/Settings/index'
 
 
 const Home = lazy(() => import('./components/Home'))
@@ -96,7 +116,28 @@ const App = () => {
                 <Route path="payment" element={<Payment />} />
                 <Route path="invoices/create" element={<CreateInvoice />} />
                 <Route path="coupons" element={<Coupons />} />
-                <Route path="settings" element={<Settings />} />
+                <Route path="settings" element={<SettingsLayout />}>
+                  <Route index element={<SettingsIndex />} />
+                  <Route path="general" element={<General />} />
+                  <Route path="store" element={<Store />} />
+                  <Route path="payment" element={<PaymentSettings />} />
+                  <Route path="shipping" element={<Shipping />} />
+                  <Route path="email" element={<Email />} />
+                  <Route path="whatsapp" element={<WhatsApp />} />
+                  <Route path="firebase" element={<Firebase />} />
+                  <Route path="notifications" element={<Notifications />} />
+                  <Route path="invoice" element={<Invoice />} />
+                  <Route path="seo" element={<SEO />} />
+                  <Route path="appearance" element={<Appearance />} />
+                  <Route path="security" element={<Security />} />
+                  <Route path="users-roles" element={<UsersRoles />} />
+                  <Route path="analytics" element={<AnalyticsSettings />} />
+                  <Route path="backup-restore" element={<BackupRestore />} />
+                  <Route path="api" element={<APISettings />} />
+                  <Route path="activity-logs" element={<ActivityLogs />} />
+                  <Route path="system-health" element={<SystemHealth />} />
+                  <Route path="developer" element={<Developer />} />
+                </Route>
               </Route>
             </Route>
 
