@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+import FloatingWhatsApp from "./FloatingWhatsApp";
 import LoginRegister, { UserMenu } from "./Admin/Login_Register";
 import { useCart } from "../contexts/CartContext";
 import { formatCurrency } from "../util/helpers";
@@ -216,6 +217,8 @@ const Layout = ({ children }) => {
             </div>
 
             <LoginRegister isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+
+            <FloatingWhatsApp />
 
             {/* =========== Main Content =========== */}
             <main className={`flex-1 ${location.pathname === '/' ? '-mt-[72px]' : ''}`}>

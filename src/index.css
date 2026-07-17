@@ -80,8 +80,37 @@ img, video {
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+   0% { background-position: -200% 0; }
+   100% { background-position: 200% 0; }
+}
+
+/* Floating WhatsApp widget */
+@keyframes wa-heartbeat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.08); }
+  24% { transform: scale(1); }
+  36% { transform: scale(1.04); }
+  48% { transform: scale(1); }
+}
+
+@keyframes wa-glow {
+  0%, 100% { box-shadow: 0 8px 24px rgba(37, 211, 102, 0.35), 0 0 0 0 rgba(37, 211, 102, 0.45); }
+  50% { box-shadow: 0 8px 28px rgba(37, 211, 102, 0.45), 0 0 0 14px rgba(37, 211, 102, 0); }
+}
+
+.animate-wa-heartbeat {
+  animation: wa-heartbeat 2.6s ease-in-out infinite;
+}
+
+.animate-wa-glow {
+  animation: wa-glow 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-wa-heartbeat,
+  .animate-wa-glow {
+    animation: none;
+  }
 }
 
 /* Sticky header alignment helpers */
