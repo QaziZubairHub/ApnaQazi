@@ -18,6 +18,8 @@ import Coupons from './components/Admin/Coupons'
 import ProtectedRoute from './components/Admin/ProtectedRoute'
 import LoginRegister from './components/Admin/Login_Register'
 import Preloader from './components/Preloader'
+import CategoryPage from './components/CategoryPage'
+
 
 const Home = lazy(() => import('./components/Home'))
 
@@ -26,7 +28,6 @@ const Contact = lazy(() => import('./components/Contact us'))
 const Cart = lazy(() => import('./components/Cart'))
 
 const Checkout = lazy(() => import('./components/Checkout'))
-const Belt = lazy(() => import('./components/Belt'))
 const BeltProductPage = lazy(() => import('./components/Beltproductpage'))
 
 const AdminLoginRoute = () => {
@@ -69,8 +70,11 @@ const App = () => {
             <Route path="/Cart" element={<Cart />} />
             <Route path="/cart" element={<Navigate to="/Cart" replace />} />
             <Route path="/Checkout" element={<Checkout />} />
-            <Route path="/Belt" element={<Belt />} />
-            <Route path="/belts" element={<Navigate to="/Belt" replace />} />
+
+            {/* Category routing (dynamic): /:categorySlug */}
+            <Route path="/:categorySlug" element={<CategoryPage />} />
+
+            {/* Back-compat product/category routes */}
             <Route path="/Beltproductpage" element={<BeltProductPage />} />
             <Route path="/Beltproductpage/:id" element={<BeltProductPage />} />
             <Route path="/product/:id" element={<BeltProductPage />} />

@@ -131,7 +131,8 @@ const BeltProductPage = () => {
           {/* ===================== RIGHT SIDE: PRODUCT DETAILS ===================== */}
           <div className="flex flex-col">
             
-            <div className="text-xs text-gray-500 mb-4 tracking-wide"><Link to="/" className="hover:text-black">Home</Link> <span className="mx-1">/</span> <Link to="/Belt" className="hover:text-black">Belts</Link> <span className="mx-1">/</span> <span className="text-gray-800">{product.title}</span></div>
+            <div className="text-xs text-gray-500 mb-4 tracking-wide"><Link to="/" className="hover:text-black">Home</Link> <span className="mx-1">/</span> <Link to={`/${(product?.category || 'belts').toLowerCase()}`} className="hover:text-black">{product?.category || 'Belts'}</Link> <span className="mx-1">/</span> <span className="text-gray-800">{product.title}</span></div>
+
             
             <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 leading-tight mb-4">{product.title}</h1>
             
@@ -236,7 +237,8 @@ const BeltProductPage = () => {
 
             <div className="text-xs text-gray-500 space-y-2 pb-6 border-b border-gray-200">
               <p><span className="font-medium text-gray-700">SKU:</span> {product.sku}</p>
-              <p><span className="font-medium text-gray-700">Category:</span> <Link to="/Belt" className="underline hover:text-black">{product.category}</Link></p>
+              <p><span className="font-medium text-gray-700">Category:</span> <Link to={`/${(product?.category || 'belts').toLowerCase()}`} className="underline hover:text-black">{product.category}</Link></p>
+
             </div>
 
             {/* ACCORDION */}

@@ -49,13 +49,16 @@ const heroSlides = [
 
 const categories = [
   { id: 1, title: "Jewellery",     image: jewelleryImg,  link: "/jewellery" },
-  { id: 2, title: "Brand Clothes", image: BrandImg,      link: "/Brand cloths" },
-  { id: 3, title: "Belt",          image: BeltImg,       link: "/Belt" },
-  { id: 4, title: "Grocery",       image: GrocessoryImg, link: "/Grocessory" },
+  { id: 2, title: "Clothes", image: BrandImg,      link: "/clothes" },
+  { id: 3, title: "Belts",          image: BeltImg,       link: "/belts" },
+
+  { id: 4, title: "Grocery",       image: GrocessoryImg, link: "/grocery" },
+
   { id: 5, title: "Watches",       image: WatchesImg,    link: "/watches" },
-  { id: 6, title: "Sunglass",      image: SunglassImg,   link: "/Sunglass" },
-  { id: 7, title: "Leather Jacket", image: "https://z-cdn-media.chatglm.cn/files/c5b7d69a-e46d-4345-9d5a-da2ec27db480.png?auth_key=1882559984-224e6ca4307c4ab2b743a340e5ed5654-0-2cb86a993c86fa1d9ad04f24e1fae1d5", link: "/leather-jackets" },
+  { id: 6, title: "Sunglasses",      image: SunglassImg,   link: "/sunglasses" },
+  { id: 7, title: "Jackets", image: "https://z-cdn-media.chatglm.cn/files/c5b7d69a-e46d-4345-9d5a-da2ec27db480.png?auth_key=1882559984-224e6ca4307c4ab2b743a340e5ed5654-0-2cb86a993c86fa1d9ad04f24e1fae1d5", link: "/jackets" },
 ];
+
 
 const features = [
   { id: 1, icon: "🚚", title: "Free Shipping",    desc: "Free shipping Rs.10k orders" },
@@ -233,39 +236,55 @@ const Home = () => {
 
           <SectionHeading prefix="New Collection" typingWord={jewelleryWord} />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-            {jewelleryProducts.map((prod) => <ProductCard key={prod.id} prod={prod} />)}
-          </div>
+              {jewelleryProducts.map((prod) => (
+                <ProductCard key={prod.id} prod={prod} linkTo={`/jewellery`} />
+              ))}
+            </div>
           <ViewAllBtn to="/jewellery" text="View All Jewellery" />
+
 
           <div className="mt-16 md:mt-24">
             <SectionHeading prefix="Shop by" typingWord={sunglassWord} />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {sunglassProducts.map((prod) => <ProductCard key={prod.id} prod={prod} />)}
+              {sunglassProducts.map((prod) => (
+                <ProductCard key={prod.id} prod={prod} linkTo={`/sunglasses`} />
+              ))}
             </div>
+
             <ViewAllBtn to="/sunglasses" text="View All Sunglasses" />
           </div>
 
           <div className="mt-16 md:mt-24">
             <SectionHeading prefix="Shop by" typingWord={watchWord} />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {watchProducts.map((prod) => <ProductCard key={prod.id} prod={prod} />)}
+              {watchProducts.map((prod) => (
+                <ProductCard key={prod.id} prod={prod} linkTo={`/watches`} />
+              ))}
             </div>
+
             <ViewAllBtn to="/watches" text="View All Watches" />
           </div>
 
           <div className="mt-16 md:mt-24">
             <SectionHeading prefix="Shop by" typingWord={beltWord} />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {beltProducts.map((prod) => <ProductCard key={prod.id} prod={prod} />)}
+              {beltProducts.map((prod) => (
+                <ProductCard key={prod.id} prod={prod} linkTo={`/belts`} />
+              ))}
             </div>
-            <ViewAllBtn to="/Belt" text="View All Belts" />
+
+            <ViewAllBtn to="/belts" text="View All Belts" />
+
           </div>
 
           <div className="mt-16 md:mt-24">
             <SectionHeading prefix="Shop by" typingWord={clothesWord} />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {brandClothProducts.map((prod) => <ProductCard key={prod.id} prod={prod} />)}
+              {brandClothProducts.map((prod) => (
+                <ProductCard key={prod.id} prod={prod} linkTo={`/clothes`} />
+              ))}
             </div>
+
             <ViewAllBtn to="/brand-clothes" text="View All Brand Clothes" />
           </div>
 
@@ -292,7 +311,8 @@ const Home = () => {
               { id: 2, name: 'Brown Suede Casual Jacket', modelSet: "Winter Collection 2026", image: "https://z-cdn-media.chatglm.cn/files/1c4a9a7f-5c98-4e23-ac8a-04b2eb2b2c61.png?auth_key=1882559984-c231ab6984d74db6bc358f9ec103552e-0-cdb1160d27d22d0db09f576772e50a6a" },
               { id: 3, name: 'Black Hooded Leather Jacket', modelSet: "Winter Collection 2026", image: "https://z-cdn-media.chatglm.cn/files/75426710-9b85-4576-8082-dcb2ea772ad8.png?auth_key=1882559984-f733b14213d44b789caf1498187f246f-0-6b9e61bc35406203a3be69471c0d1147" },
               { id: 4, name: 'BJ Premium Black Jacket', modelSet: "Winter Collection 2026", image: "https://z-cdn-media.chatglm.cn/files/10479f21-a60e-4d1b-ab05-b52179d2add9.png?auth_key=1882559984-2354eae5b6bb4638a175252466975038-0-d831581397fb8ddb9233cc0106ed1c39" },
-            ].map((prod) => <ProductCard key={prod.id} prod={prod} linkTo="/leather-jackets" />)}
+            ].map((prod) => <ProductCard key={prod.id} prod={prod} linkTo="/jackets" />)}
+
           </div>
           <div className="text-center mt-12 pb-4">
             <ViewAllBtn to="/leather-jackets" text="View All Leather Jackets" />
