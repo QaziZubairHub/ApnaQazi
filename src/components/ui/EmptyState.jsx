@@ -1,7 +1,7 @@
 import { Inbox } from "lucide-react";
 import { motion } from "framer-motion";
 
-const EmptyState = ({ title = "No data found", description = "There's nothing here yet.", icon: Icon = Inbox, action, actionLabel }) => {
+const EmptyState = ({ title = "No data found", description = "There's nothing here yet.", icon: Icon = Inbox, action, actionLabel, actionButtons }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -20,6 +20,9 @@ const EmptyState = ({ title = "No data found", description = "There's nothing he
         >
           {actionLabel}
         </button>
+      )}
+      {actionButtons && (
+        <div className="mt-4">{actionButtons}</div>
       )}
     </motion.div>
   );

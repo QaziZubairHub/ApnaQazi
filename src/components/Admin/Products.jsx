@@ -8,13 +8,17 @@ import {
   Archive,
   Copy,
   Eye,
-  Pencil,
   Image as ImageIcon,
   RefreshCw,
   SlidersHorizontal,
   Search,
   ChevronLeft,
   ChevronRight,
+  Box,
+  CheckCircle2,
+  Star,
+  BarChart2,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -715,7 +719,7 @@ const Products = () => {
         ) : (
           <>
             <StatCard title="Out Of Stock" value={stats.outOfStock} icon={Archive} prefix="" />
-            <StatCard title="Low Stock" value={stats.lowStock} icon={LowStock} prefix="" />
+            <StatCard title="Low Stock" value={stats.lowStock} icon={AlertTriangle} prefix="" />
             <StatCard title="Inventory Value" value={stats.inventoryValue} prefix="Rs " icon={BarChart2} />
             <div />
           </>
