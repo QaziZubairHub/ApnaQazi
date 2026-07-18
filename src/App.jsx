@@ -108,6 +108,7 @@ const App = () => {
               <Route path="/admin" element={<Layout />}>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="product" element={<Product />} />
+                <Route path="products" element={<Product />} />
                 <Route path="product/create" element={lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductCreate })))} />
                 <Route path="product/:id/edit" element={lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductEdit })))} />
                 <Route path="order" element={<Order />} />

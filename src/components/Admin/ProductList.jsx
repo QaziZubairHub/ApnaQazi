@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -15,6 +15,7 @@ import {
 
 import { db } from "../../firebase";
 import { formatCurrency, parseDateValue } from "../../util/helpers";
+import { duplicateProduct, bulkUpdateProducts } from "../../services/firebase/products";
 
 import {
   collection,
@@ -61,6 +62,36 @@ const ProductList = () => {
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [brandOptions, setBrandOptions] = useState([]);
   const [collectionOptions, setCollectionOptions] = useState([]);
+
+  // Enhanced UI state (sticky/keyboard/bulk-edit) layered on the existing module
+  const [activeRowIndex, setActiveRowIndex] = useState(-1);
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [bulkEditPatch, setBulkEditPatch] = useState({ status: "", featured: "", categoryId: "", brandId: "" });
+  const tableWrapRef = useRef(null);
+
+  // Keyboard navigation: only active when the table container is focused
+  useEffect(() => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    const onKey = (e) => {
+      if (document.activeElement !== el) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveRowIndex((i) => Math.min(products.length - 1, i < 0 ? 0 : i + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveRowIndex((i) => Math.max(0, i - 1));
+      } else if (e.key === " " && activeRowIndex >= 0 && products[activeRowIndex]) {
+        e.preventDefault();
+        toggleOne(products[activeRowIndex].id);
+      } else if (e.key === "Enter" && activeRowIndex >= 0 && products[activeRowIndex]) {
+        e.preventDefault();
+        navigate(`/admin/product/${products[activeRowIndex].id}/edit`);
+      }
+    };
+    el.addEventListener("keydown", onKey);
+    return () => el.removeEventListener("keydown", onKey);
+  }, [products, activeRowIndex]);
 
   useEffect(() => {
     let unsub = false;
@@ -236,6 +267,37 @@ const ProductList = () => {
       setSelectedIds([]);
     } catch {
       toast.error("Delete failed.");
+    }
+  };
+
+  const handleDuplicate = async (id) => {
+    try {
+      await duplicateProduct(id);
+      toast.success("Product duplicated.");
+    } catch {
+      toast.error("Duplicate failed.");
+    }
+  };
+
+  const handleBulkEditSave = async () => {
+    if (selectedIds.length === 0) return;
+    const patch = {};
+    if (bulkEditPatch.status) patch.status = bulkEditPatch.status;
+    if (bulkEditPatch.featured !== "") patch.featured = bulkEditPatch.featured === "true";
+    if (bulkEditPatch.categoryId) patch.categoryId = bulkEditPatch.categoryId;
+    if (bulkEditPatch.brandId) patch.brandId = bulkEditPatch.brandId;
+    if (Object.keys(patch).length === 0) {
+      setShowBulkEdit(false);
+      return;
+    }
+    try {
+      await bulkUpdateProducts(selectedIds, patch);
+      toast.success(`Updated ${selectedIds.length} product(s).`);
+      setSelectedIds([]);
+      setShowBulkEdit(false);
+      setBulkEditPatch({ status: "", featured: "", categoryId: "", brandId: "" });
+    } catch {
+      toast.error("Bulk update failed.");
     }
   };
 
@@ -430,6 +492,12 @@ const ProductList = () => {
                 <Archive size={16} /> Archive
               </button>
               <button
+                onClick={() => setShowBulkEdit(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-[12px] bg-slate-100 text-primary text-sm font-semibold hover:bg-slate-200 transition-colors"
+              >
+                <Pencil size={16} /> Bulk Edit
+              </button>
+              <button
                 onClick={handleBulkDelete}
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-[12px] bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100 transition-colors"
               >
@@ -446,6 +514,8 @@ const ProductList = () => {
         products={products}
         selectedIds={selectedIds}
         allOnPageSelected={allOnPageSelected}
+        activeRowIndex={activeRowIndex}
+        tableWrapRef={tableWrapRef}
         onToggleAll={toggleAll}
         onToggleOne={toggleOne}
         onSort={handleSortClick}
@@ -454,11 +524,60 @@ const ProductList = () => {
         fmtDate={fmtDate}
         onView={(id) => navigate(`/admin/product/${id}/edit`)}
         onEdit={(_id) => {}}
-
-        onDuplicate={(id) => toast("Duplicate not implemented in this scaffold.")}
+        onDuplicate={handleDuplicate}
         onArchive={(id) => updateDoc(doc(db, "products", id), { status: "archived", updatedAt: new Date().toISOString() }).then(() => toast.success("Archived."))}
         onDelete={(id) => deleteDoc(doc(db, "products", id)).then(() => toast.success("Deleted."))}
       />
+
+      {/* Bulk Edit Modal */}
+      {showBulkEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowBulkEdit(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Bulk Edit ({selectedIds.length})</h3>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                <select value={bulkEditPatch.status} onChange={(e) => setBulkEditPatch((p) => ({ ...p, status: e.target.value }))} className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                  <option value="">No change</option>
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Featured</label>
+                <select value={bulkEditPatch.featured} onChange={(e) => setBulkEditPatch((p) => ({ ...p, featured: e.target.value }))} className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                  <option value="">No change</option>
+                  <option value="true">Featured</option>
+                  <option value="false">Not featured</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <select value={bulkEditPatch.categoryId} onChange={(e) => setBulkEditPatch((p) => ({ ...p, categoryId: e.target.value }))} className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                    <option value="">No change</option>
+                    {categoryOptions.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Brand</label>
+                  <select value={bulkEditPatch.brandId} onChange={(e) => setBulkEditPatch((p) => ({ ...p, brandId: e.target.value }))} className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                    <option value="">No change</option>
+                    {brandOptions.map((b) => (<option key={b.id} value={b.id}>{b.name}</option>))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+              <button onClick={() => setShowBulkEdit(false)} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Cancel</button>
+              <button onClick={handleBulkEditSave} className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors">Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex items-center justify-between flex-wrap gap-3 border-t border-slate-100 pt-4">
@@ -504,6 +623,8 @@ const CardTable = ({
   products,
   selectedIds,
   allOnPageSelected,
+  activeRowIndex,
+  tableWrapRef,
   onToggleAll,
   onToggleOne,
   onSort,
@@ -519,10 +640,14 @@ const CardTable = ({
   const sortIndicator = (key) => (sortBy === key ? (sortDir === "asc" ? " ↑" : " ↓") : "");
 
   return (
-    <div className="rounded-[16px] border border-slate-200 bg-white overflow-hidden">
-      <div className="overflow-x-auto">
+    <div
+      ref={tableWrapRef}
+      tabIndex={0}
+      className="rounded-[16px] border border-slate-200 bg-white overflow-hidden outline-none focus:ring-2 focus:ring-primary/30 max-h-[70vh]"
+    >
+      <div className="overflow-auto max-h-[70vh]">
         <table className="w-full text-sm text-left">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-white">
             <tr className="border-b border-slate-100 text-slate-400">
               <th className="px-4 py-3 w-10">
                 <button onClick={onToggleAll} className="text-slate-400 hover:text-primary transition-colors">

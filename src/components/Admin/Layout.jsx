@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { label: "Customers", icon: Users, link: "/admin/customers" },
   { label: "Orders", icon: ShoppingCart, link: "/admin/order" },
   { label: "Products", icon: Package, link: "/admin/product" },
+  { label: "Products (Enhanced)", icon: Package, link: "/admin/products" },
   { label: "Invoices", icon: FileText, link: "/admin/payment" },
   { label: "Coupons", icon: Ticket, link: "/admin/coupons" },
   { label: "Analytics", icon: BarChart3, link: "/admin/analytics" },
