@@ -7,8 +7,6 @@ import {
   query,
   orderBy,
   where,
-  limit,
-  startAfter,
   writeBatch,
   deleteDoc,
   setDoc,
@@ -17,12 +15,7 @@ import {
 
 import { db } from "../../../src/firebase";
 
-import { getDownloadURL, getStorage, ref as storageRef } from "firebase/storage";
-
 const PRODUCTS_COL = "products";
-const CATEGORIES_COL = "categories";
-const BRANDS_COL = "brands";
-const COLLECTIONS_COL = "collections";
 
 const toDate = (v) => {
   if (!v) return null;
@@ -44,19 +37,11 @@ export const subscribeProducts = (onData, { orderField = "createdAt" } = {}) => 
 };
 
 export const fetchProductsPage = async ({
-  pageSize,
-  cursor,
   orderField = "createdAt",
   orderDir = "desc",
   filters = {},
 }) => {
-  const base = query(collection(db, PRODUCTS_COL), orderBy(orderField, orderDir));
-  let q = base;
-  if (cursor) {
-    q = query(collection(db, PRODUCTS_COL), orderBy(orderField, orderDir), startAfter(cursor));
-  }
-  q = query(q, limit(pageSize));
-
+  const q = query(collection(db, PRODUCTS_COL), orderBy(orderField, orderDir));
   const snap = await getDocs(q);
   const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
@@ -72,6 +57,8 @@ export const fetchProductsPage = async ({
     priceMax,
     dateFrom,
     dateTo,
+    updatedFrom,
+    updatedTo,
   } = filters;
 
   const qText = (searchText || "").trim().toLowerCase();
@@ -93,8 +80,19 @@ export const fetchProductsPage = async ({
       if (dateTo && d > dateTo) return false;
     }
 
+    if (updatedFrom || updatedTo) {
+      const d = toDate(p.updatedAt);
+      if (!d) return false;
+      if (updatedFrom && d < updatedFrom) return false;
+      if (updatedTo && d > updatedTo) return false;
+    }
+
     if (qText) {
-      const hay = [p.name, p.slug, p.sku, p.barcode, p.sellingPrice?.toString?.(), p.costPrice?.toString?.()]
+      const hay = [
+        p.name, p.slug, p.sku, p.barcode, p.brandId, p.brandName, p.categoryId, p.categoryName,
+        p.vendor, p.vendorName, (p.tags || []).join(" "), p.description, p.seoTitle, p.seoKeywords,
+        p.sellingPrice?.toString?.(), p.costPrice?.toString?.(),
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -112,10 +110,7 @@ export const fetchProductsPage = async ({
     return true;
   });
 
-  const nextCursor = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].get(orderField) : null;
-  const totalCount = null;
-
-  return { items: filtered, nextCursor, totalCount };
+  return { items: filtered };
 };
 
 export const fetchCollections = async (colName, { whereField = null, whereOp = null, whereValue = null } = {}) => {

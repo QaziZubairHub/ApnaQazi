@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import Card from '../ui/Card';
 
 const ProductVariantForm = ({ variants = [], onChange }) => {
   const [attributes, setAttributes] = useState([

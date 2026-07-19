@@ -9,6 +9,7 @@ export function useProductStats() {
     draftProducts: 0,
     archivedProducts: 0,
     featuredProducts: 0,
+    bestSellers: 0,
     outOfStock: 0,
     lowStock: 0,
     inventoryValue: 0,
@@ -34,6 +35,7 @@ export function useProductStats() {
           let draft = 0;
           let archived = 0;
           let featured = 0;
+          let bestSellers = 0;
           let outOfStock = 0;
           let lowStock = 0;
           let inventoryValue = 0;
@@ -55,14 +57,18 @@ export function useProductStats() {
 
             if (p.featured) featured++;
 
+            const sold = Number(p.totalSold ?? p.salesCount ?? p.sales ?? 0);
+            if (sold > 0) bestSellers++;
+
             const qty = Number(p.stockQuantity ?? p.stock?.quantity ?? 0);
             const lowT = Number(p.lowStockThreshold ?? p.stock?.lowStockThreshold ?? 5);
             if (qty <= 0) outOfStock++;
             else if (qty <= lowT) lowStock++;
 
             const price = Number(p.price ?? 0);
+            const cost = Number(p.costPrice ?? p.price ?? 0);
             totalPrice += price;
-            inventoryValue += computeInventoryValue(price, qty);
+            inventoryValue += cost * qty;
 
             const created = p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt || 0);
             if (created >= today) addedToday++;
@@ -75,6 +81,7 @@ export function useProductStats() {
             draftProducts: draft,
             archivedProducts: archived,
             featuredProducts: featured,
+            bestSellers,
             outOfStock,
             lowStock,
             inventoryValue,

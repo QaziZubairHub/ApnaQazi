@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Package, Eye, FileEdit, Archive, Star, PackageX, AlertTriangle, BarChart3, TrendingUp, DollarSign } from "lucide-react";
+import { Package, Eye, FileEdit, Archive, Star, PackageX, AlertTriangle, BarChart3, TrendingUp, DollarSign, Flame, CalendarDays } from "lucide-react";
 import { useProductStats } from "../../hooks/useProductStats";
 import { StatCardSkeleton } from "../../../components/ui/Skeleton";
 import { formatCurrency } from "../../../util/helpers";
@@ -10,11 +10,13 @@ const KPI_CARDS = [
   { key: "draftProducts", title: "Draft", icon: FileEdit, color: "from-amber-500 to-orange-600" },
   { key: "archivedProducts", title: "Archived", icon: Archive, color: "from-slate-500 to-gray-600" },
   { key: "featuredProducts", title: "Featured", icon: Star, color: "from-yellow-500 to-amber-600" },
+  { key: "bestSellers", title: "Best Sellers", icon: Flame, color: "from-rose-500 to-pink-600" },
   { key: "outOfStock", title: "Out of Stock", icon: PackageX, color: "from-red-500 to-rose-600" },
   { key: "lowStock", title: "Low Stock", icon: AlertTriangle, color: "from-orange-500 to-red-600" },
   { key: "inventoryValue", title: "Inventory Value", icon: DollarSign, color: "from-blue-500 to-cyan-600", format: "currency" },
   { key: "averagePrice", title: "Avg. Price", icon: BarChart3, color: "from-violet-500 to-purple-600", format: "currency" },
   { key: "recentlyAdded", title: "Added Today", icon: TrendingUp, color: "from-green-500 to-emerald-600" },
+  { key: "addedThisMonth", title: "Added This Month", icon: CalendarDays, color: "from-cyan-500 to-blue-600" },
 ];
 
 const StatCard = ({ title, value, icon: Icon, color, format, delay }) => (
@@ -41,8 +43,8 @@ export function KpiCards() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {Array.from({ length: 10 }).map((_, i) => (
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 12 }).map((_, i) => (
           <StatCardSkeleton key={i} />
         ))}
       </div>
@@ -50,7 +52,7 @@ export function KpiCards() {
   }
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {KPI_CARDS.map((card, i) => (
         <StatCard
           key={card.key}

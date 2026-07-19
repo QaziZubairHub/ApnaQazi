@@ -5,6 +5,7 @@ import { DEFAULT_FILTERS } from "../utils/constants";
 const DEBOUNCE_MS = 300;
 
 export function useProductSearch() {
+  const [allProducts, setAllProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,6 +15,7 @@ export function useProductSearch() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
+  const cursorRef = useRef(null);
 
   const searchTimerRef = useRef(null);
   const debouncedSearchRef = useRef(filters.search);
@@ -39,6 +41,7 @@ export function useProductSearch() {
     setDebouncedSearch("");
     debouncedSearchRef.current = "";
     setPage(0);
+    cursorRef.current = null;
   }, []);
 
   const onSortChange = useCallback((key) => {
@@ -79,7 +82,7 @@ export function useProductSearch() {
     try {
       const result = await fetchProductsPage({
         pageSize,
-        cursor: null,
+        cursor: cursorRef.current,
         orderField: sortBy,
         orderDir: sortDir,
         filters: {
@@ -94,27 +97,40 @@ export function useProductSearch() {
           priceMax: filters.priceMax ? Number(filters.priceMax) : null,
           dateFrom: filters.dateCreatedFrom ? new Date(filters.dateCreatedFrom) : null,
           dateTo: filters.dateCreatedTo ? new Date(filters.dateCreatedTo) : null,
+          updatedFrom: filters.dateUpdatedFrom ? new Date(filters.dateUpdatedFrom) : null,
+          updatedTo: filters.dateUpdatedTo ? new Date(filters.dateUpdatedTo) : null,
         },
       });
 
-      setProducts(result.items || []);
-      setTotalCount(result.totalCount || result.items?.length || 0);
+      setAllProducts(result.items || []);
+      setTotalCount(result.items?.length || 0);
     } catch (err) {
       setError(err.message || "Failed to load products");
+      setAllProducts([]);
       setProducts([]);
     } finally {
       setLoading(false);
     }
   }, [pageSize, sortBy, sortDir, debouncedSearch, filters]);
 
+  const goToPage = useCallback((nextPage) => {
+    setPage(nextPage);
+  }, []);
+
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
-  const allSelected = products.length > 0;
+  useEffect(() => {
+    const start = page * pageSize;
+    setProducts(allProducts.slice(start, start + pageSize));
+  }, [allProducts, page, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(allProducts.length / pageSize));
 
   return {
     products,
+    allProducts,
     loading,
     error,
     filters,
@@ -130,6 +146,8 @@ export function useProductSearch() {
     pageSize,
     setPageSize,
     totalCount,
+    totalPages,
+    goToPage,
     loadProducts,
   };
 }

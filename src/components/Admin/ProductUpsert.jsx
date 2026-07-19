@@ -14,6 +14,7 @@ import {
 
 import { genSlug, parseNumber } from "../../util/helpers";
 import { Tag as TagIcon } from "lucide-react";
+import ProductVariantForm from "../forms/ProductVariantForm";
 
 
 import {
@@ -75,6 +76,8 @@ const ProductUpsert = ({ mode = "create" }) => {
     },
 
     images: [], // image URLs
+    variants: [],
+    createdAt: "",
   });
 
   const [uploading, setUploading] = useState(false);
@@ -134,6 +137,8 @@ const ProductUpsert = ({ mode = "create" }) => {
             urlSlug: data?.seo?.urlSlug ?? data?.slug ?? "",
           },
           images: Array.isArray(data?.images) ? data.images : [],
+          variants: Array.isArray(data?.variants) ? data.variants : [],
+          createdAt: data?.createdAt || "",
         }));
       } catch {
         toast.error("Failed to load product.");
@@ -202,14 +207,19 @@ const ProductUpsert = ({ mode = "create" }) => {
     try {
       const now = new Date().toISOString();
 
+      let finalSku = form.sku.trim();
+      if (!finalSku) {
+        finalSku = `AQ-PROD-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      }
+
       const productPayload = {
         name: form.name.trim(),
         slug: form.slug.trim(),
-        shortDescription: form.shortDescription.trim(),
-        description: form.description.trim(),
+        shortDescription: form.shortDescription.trim() || "",
+        description: form.description.trim() || "",
 
-        sku: form.sku.trim(),
-        barcode: form.barcode.trim(),
+        sku: finalSku,
+        barcode: form.barcode.trim() || "",
 
         price: Number(form.price) || 0,
         costPrice: Number(form.costPrice) || 0,
@@ -217,53 +227,49 @@ const ProductUpsert = ({ mode = "create" }) => {
         discount: Number(form.discount) || 0,
         tax: Number(form.tax) || 0,
 
-        categoryId: form.categoryId,
-        brandId: form.brandId,
-        collectionId: form.collectionId,
+        categoryId: form.categoryId || "",
+        brandId: form.brandId || "",
+        collectionId: form.collectionId || "",
         tags: form.tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-        vendor: form.vendor.trim(),
+          ? (typeof form.tags === "string" ? form.tags.split(",").map((t) => t.trim()).filter(Boolean) : form.tags)
+          : [],
+        vendor: form.vendor.trim() || "",
 
         featured: !!form.featured,
-        status: form.status,
+        status: form.status || "draft",
 
-        images: form.images,
+        images: Array.isArray(form.images) ? form.images : [],
+        variants: Array.isArray(form.variants) ? form.variants : [],
 
-        // inventory (normalized on products for list performance)
         stockQuantity: Number(form.stock.quantity) || 0,
         lowStockThreshold: Number(form.stock.lowStockThreshold) || 0,
-        trackInventory: !!form.stock.trackInventory,
-        allowBackorders: !!form.stock.allowBackorders,
+        trackInventory: typeof form.stock.trackInventory === "boolean" ? form.stock.trackInventory : true,
+        allowBackorders: typeof form.stock.allowBackorders === "boolean" ? form.stock.allowBackorders : false,
 
         seo: {
-          metaTitle: form.seo.metaTitle.trim(),
-          metaDescription: form.seo.metaDescription.trim(),
-          keywords: form.seo.keywords.trim(),
-          ogImage: form.seo.ogImage.trim(),
-          urlSlug: form.seo.urlSlug.trim() || form.slug.trim(),
+          metaTitle: form.seo.metaTitle.trim() || "",
+          metaDescription: form.seo.metaDescription.trim() || "",
+          keywords: form.seo.keywords.trim() || "",
+          ogImage: form.seo.ogImage.trim() || "",
+          urlSlug: form.seo.urlSlug.trim() || form.slug.trim() || "",
         },
 
         updatedAt: now,
-        createdAt: mode === "create" ? now : undefined,
+        createdAt: mode === "create" ? now : (form.createdAt || now),
       };
-
-      const payload = { ...productPayload };
-      if (mode === "edit") delete payload.createdAt;
 
       if (mode === "create") {
         const ref = doc(collection(db, "products"));
-        await setDoc(ref, payload);
+        await setDoc(ref, productPayload);
         toast.success("Product created.");
-        navigate("/admin/product");
+        navigate("/admin/products");
       } else {
-        await updateDoc(doc(db, "products", id), payload);
+        await setDoc(doc(db, "products", id), productPayload);
         toast.success("Product updated.");
-        navigate("/admin/product");
+        navigate("/admin/products");
       }
-    } catch {
-      toast.error("Save failed.");
+    } catch (err) {
+      toast.error("Save failed: " + (err.message || "Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -557,6 +563,19 @@ const ProductUpsert = ({ mode = "create" }) => {
                 <input className={inputClass} value={form.vendor} onChange={(e) => onChange("vendor", e.target.value)} />
               </div>
             </div>
+          </section>
+
+          <section className="rounded-[16px] border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-800">Variants</h3>
+                <p className="text-xs text-slate-500">Configure variant attributes and combinations</p>
+              </div>
+            </div>
+            <ProductVariantForm
+              variants={form.variants}
+              onChange={(variants) => onChange("variants", variants)}
+            />
           </section>
         </div>
 

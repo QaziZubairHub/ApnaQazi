@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Package, RefreshCw } from "lucide-react";
 import { KpiCards } from "../components/dashboard/KpiCards";
 import { SearchAndFilters } from "../components/toolbar/SearchAndFilters";
@@ -23,9 +23,14 @@ export default function ProductsPage() {
     loadProducts,
     totalCount,
     pageSize,
+    setPageSize,
+    page,
+    totalPages,
+    goToPage,
+    allProducts,
   } = useProductSearch();
 
-  const { selectedIds, allSelected, toggleOne, toggleAll, clearSelection } = useProductSelection(products);
+  const { selectedIds, allSelected, someSelected, toggleOne, toggleAll, clearSelection } = useProductSelection(products);
 
   const handleRefresh = useCallback(() => {
     loadProducts();
@@ -65,6 +70,7 @@ export default function ProductsPage() {
       <TableToolbar
         selectedIds={selectedIds}
         products={products}
+        allProducts={allProducts}
         onRefresh={handleRefresh}
         clearSelection={clearSelection}
       />
@@ -76,12 +82,19 @@ export default function ProductsPage() {
         error={error}
         selectedIds={selectedIds}
         allSelected={allSelected}
+        someSelected={someSelected}
         toggleOne={toggleOne}
         toggleAll={toggleAll}
         sortBy={sortBy}
         sortDir={sortDir}
         onSort={onSortChange}
         onRefresh={handleRefresh}
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        onPageChange={goToPage}
+        onPageSizeChange={setPageSize}
       />
 
       {/* Footer info */}

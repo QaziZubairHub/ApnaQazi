@@ -217,6 +217,20 @@ export function SearchAndFilters({ filters, onSearchChange, onFiltersChange, res
                 type="date"
                 className="px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700"
               />
+
+              <span className="text-xs text-slate-400 px-1">Updated:</span>
+              <input
+                value={filters.dateUpdatedFrom}
+                onChange={(e) => onFiltersChange({ dateUpdatedFrom: e.target.value })}
+                type="date"
+                className="px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700"
+              />
+              <input
+                value={filters.dateUpdatedTo}
+                onChange={(e) => onFiltersChange({ dateUpdatedTo: e.target.value })}
+                type="date"
+                className="px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700"
+              />
             </div>
           </motion.div>
         )}

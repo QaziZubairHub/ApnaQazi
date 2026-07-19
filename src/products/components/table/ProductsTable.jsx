@@ -1,12 +1,11 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, Pencil, Copy, Archive, Trash2, Package, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { formatCurrency, formatDate } from "../../../util/helpers";
-import { getStockStatus } from "../../../components/Admin/ProductDashboardHelpers";
 import Badge from "../../../components/ui/Badge";
-import { bulkDeleteProducts, duplicateProduct, updateProduct, bulkUpdateProducts } from "../../../services/firebase/products";
+import { bulkDeleteProducts, duplicateProduct, updateProduct } from "../../../services/firebase/products";
 
 const COLUMNS = [
   { key: "name", label: "Product", width: 240, minWidth: 160, sortable: true },
@@ -38,12 +37,19 @@ export function ProductsTable({
   error,
   selectedIds,
   allSelected,
+  someSelected,
   toggleOne,
   toggleAll,
   sortBy,
   sortDir,
   onSort,
   onRefresh,
+  page = 0,
+  totalPages = 1,
+  pageSize = 25,
+  totalCount = 0,
+  onPageChange,
+  onPageSizeChange,
 }) {
   const navigate = useNavigate();
   const [density, setDensity] = useState("normal");
@@ -191,13 +197,15 @@ export function ProductsTable({
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80">
                 <th className="sticky top-0 z-20 bg-slate-50/80 px-3 py-3 w-10 border-b border-slate-100">
-                  <input
-                    type="checkbox"
-                    checked={allSelected && products.length > 0}
-                    onChange={toggleAll}
-                    className="accent-primary"
-                    aria-label="Select all"
-                  />
+                   <input
+                     type="checkbox"
+                     checked={allSelected}
+                     ref={(el) => { if (el) el.indeterminate = !allSelected && someSelected; }}
+                     onChange={toggleAll}
+                     disabled={products.length === 0}
+                     className="accent-primary"
+                     aria-label="Select all"
+                   />
                 </th>
                 {COLUMNS.map((col) => {
                   const isLast = col.key === "actions";
@@ -251,7 +259,6 @@ export function ProductsTable({
                 products.map((p, idx) => {
                   const qty = Number(p.stockQuantity ?? p.stock?.quantity ?? 0);
                   const lowT = Number(p.lowStockThreshold ?? p.stock?.lowStockThreshold ?? 5);
-                  const stockStatus = getStockStatus(qty, lowT);
                   const featured = !!p.featured;
                   const isActive = idx === activeRowIndex;
 
@@ -372,6 +379,59 @@ export function ProductsTable({
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {!loading && products.length > 0 && (
+        <div className="flex items-center justify-between flex-wrap gap-3 px-1 pt-3">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span>
+              {totalCount === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalCount)} of {totalCount}
+            </span>
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
+              className="ml-2 px-2 py-1 rounded-[8px] border border-slate-200 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {[10, 25, 50, 100].map((s) => (
+                <option key={s} value={s}>{s} / page</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onPageChange?.(0)}
+              disabled={page === 0}
+              className="px-2.5 py-1.5 rounded-[10px] text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              « First
+            </button>
+            <button
+              onClick={() => onPageChange?.(page - 1)}
+              disabled={page === 0}
+              className="px-2.5 py-1.5 rounded-[10px] text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              ‹ Prev
+            </button>
+            <span className="px-3 text-xs font-medium text-slate-600">
+              Page {page + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => onPageChange?.(page + 1)}
+              disabled={page >= totalPages - 1}
+              className="px-2.5 py-1.5 rounded-[10px] text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Next ›
+            </button>
+            <button
+              onClick={() => onPageChange?.(totalPages - 1)}
+              disabled={page >= totalPages - 1}
+              className="px-2.5 py-1.5 rounded-[10px] text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Last »
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
