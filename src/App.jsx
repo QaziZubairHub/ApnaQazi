@@ -5,8 +5,7 @@ import { Toaster } from "react-hot-toast"
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import { CartProvider } from "./contexts/CartContext"
 import NotFound from './components/Admin/NotFound'
-import Product from './components/Admin/Product'
-import Products from './components/Admin/Products'
+import ProductsPage from './products/pages/ProductsPage'
 import Layout from './components/Admin/Layout'
 import Order from './components/Admin/Orders'
 import Dashboard from './components/Admin/Dashboard'
@@ -108,8 +107,8 @@ const App = () => {
             <Route element={<ProtectedRoute />}>
               <Route path="/admin" element={<Layout />}>
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="product" element={<Product />} />
-                <Route path="products" element={<Products />} />
+                <Route path="products" element={<ProductsPage />} />
+                <Route path="product" element={<Navigate to="/admin/products" replace />} />
                 <Route path="product/create" element={lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductCreate })))} />
                 <Route path="product/:id/edit" element={lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductEdit })))} />
                 <Route path="order" element={<Order />} />
