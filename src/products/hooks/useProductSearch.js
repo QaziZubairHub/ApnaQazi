@@ -62,6 +62,7 @@ export function useProductSearch() {
     if (f.categoryId !== "all") n++;
     if (f.brandId !== "all") n++;
     if (f.collectionId !== "all") n++;
+    if (f.vendor) n++;
     if (f.status !== "all") n++;
     if (f.stock !== "all") n++;
     if (f.visibility !== "all") n++;
@@ -92,6 +93,7 @@ export function useProductSearch() {
           collectionId: filters.collectionId,
           status: filters.status,
           featured: filters.featured,
+          vendor: filters.vendor,
           stock: filters.stock,
           priceMin: filters.priceMin ? Number(filters.priceMin) : null,
           priceMax: filters.priceMax ? Number(filters.priceMax) : null,

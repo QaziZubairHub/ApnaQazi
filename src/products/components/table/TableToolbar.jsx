@@ -6,9 +6,12 @@ import { bulkUpdateProducts, bulkDeleteProducts, duplicateProduct, subscribeColl
 import { exportToCSV, exportToJSON, exportToExcel } from "../../utils/export";
 import { parseProductsFromCSV, commitProducts } from "../../utils/import";
 import Card from "../../../components/ui/Card";
+import { logAuditEvent } from "../../../services/audit";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export function TableToolbar({ selectedIds, products, allProducts = [], onRefresh, clearSelection }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showBulkMenu, setShowBulkMenu] = useState(false);
@@ -72,40 +75,49 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
     }
 
     try {
+      const uid = user?.uid || "anonymous";
       switch (action) {
         case "publish":
           await bulkUpdateProducts(selectedIds, { status: "active" });
+          logAuditEvent(uid, "bulk_publish", "products", null, { ids: selectedIds });
           toast.success(`Published ${selectedCount} products`);
           break;
         case "unpublish":
           await bulkUpdateProducts(selectedIds, { status: "draft" });
+          logAuditEvent(uid, "bulk_unpublish", "products", null, { ids: selectedIds });
           toast.success(`Unpublished ${selectedCount} products`);
           break;
         case "archive":
           await bulkUpdateProducts(selectedIds, { status: "archived" });
+          logAuditEvent(uid, "bulk_archive", "products", null, { ids: selectedIds });
           toast.success(`Archived ${selectedCount} products`);
           break;
         case "restore":
           await bulkUpdateProducts(selectedIds, { status: "active" });
+          logAuditEvent(uid, "bulk_restore", "products", null, { ids: selectedIds });
           toast.success(`Restored ${selectedCount} products`);
           break;
         case "feature":
           await bulkUpdateProducts(selectedIds, { featured: true });
+          logAuditEvent(uid, "bulk_feature", "products", null, { ids: selectedIds });
           toast.success(`Featured ${selectedCount} products`);
           break;
         case "unfeature":
           await bulkUpdateProducts(selectedIds, { featured: false });
+          logAuditEvent(uid, "bulk_unfeature", "products", null, { ids: selectedIds });
           toast.success(`Unfeatured ${selectedCount} products`);
           break;
         case "delete":
           if (!confirm(`Delete ${selectedCount} products? This cannot be undone.`)) return;
           await bulkDeleteProducts(selectedIds);
+          logAuditEvent(uid, "bulk_delete", "products", null, { ids: selectedIds });
           toast.success(`Deleted ${selectedCount} products`);
           break;
         case "duplicate":
           for (const id of selectedIds) {
             await duplicateProduct(id);
           }
+          logAuditEvent(uid, "bulk_duplicate", "products", null, { ids: selectedIds });
           toast.success(`Duplicated ${selectedCount} products`);
           break;
         case "export":

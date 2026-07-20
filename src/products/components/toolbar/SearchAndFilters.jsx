@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, RefreshCw, Filter, X } from "lucide-react";
+import { Search, RefreshCw, Filter, X, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { subscribeCollections, subscribeDistinctProductStatuses, subscribeDistinctStockStatuses } from "../../../services/firebase/products";
 
@@ -204,6 +204,16 @@ export function SearchAndFilters({ filters, onSearchChange, onFiltersChange, res
                 type="number"
                 className="w-24 px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
+
+              <div className="inline-flex items-center gap-1 px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700">
+                <User size={14} className="text-slate-400" />
+                <input
+                  value={filters.vendor}
+                  onChange={(e) => onFiltersChange({ vendor: e.target.value })}
+                  placeholder="Vendor"
+                  className="w-20 bg-transparent outline-none text-sm"
+                />
+              </div>
 
               <input
                 value={filters.dateCreatedFrom}

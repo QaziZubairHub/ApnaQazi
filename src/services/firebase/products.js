@@ -50,6 +50,7 @@ export const fetchProductsPage = async ({
     categoryId,
     brandId,
     collectionId,
+    vendor,
     status,
     featured,
     stock,
@@ -68,6 +69,7 @@ export const fetchProductsPage = async ({
     if (categoryId && categoryId !== "all" && p.categoryId !== categoryId) return false;
     if (brandId && brandId !== "all" && p.brandId !== brandId) return false;
     if (collectionId && collectionId !== "all" && p.collectionId !== collectionId) return false;
+    if (vendor && (p.vendor || "").toLowerCase() !== vendor.toLowerCase()) return false;
 
     const price = Number(p.price ?? 0);
     if (priceMin != null && !Number.isNaN(priceMin) && price < Number(priceMin)) return false;
@@ -191,7 +193,9 @@ export const bulkUpdateProducts = async (ids, patch) => {
 
 export const bulkDeleteProducts = async (ids) => {
   if (!ids?.length) return;
-  await Promise.all(ids.map((id) => deleteDoc(doc(db, PRODUCTS_COL, id))));
+  for (const id of ids) {
+    await deleteProduct(id);
+  }
 };
 
 export const duplicateProduct = async (id) => {
@@ -210,6 +214,24 @@ export const updateProduct = async (id, patch) => {
 };
 
 export const deleteProduct = async (id) => {
+  try {
+    const snap = await getDoc(doc(db, PRODUCTS_COL, id));
+    if (snap.exists()) {
+      const { images } = snap.data();
+      if (images?.length) {
+        const { deleteFile } = await import("../storage");
+        for (const url of images) {
+          try {
+            const path = url.split("/o/")[1]?.split("?")[0];
+            if (path) {
+              const decodedPath = decodeURIComponent(path);
+              await deleteFile(decodedPath);
+            }
+          } catch { /* ignore storage errors */ }
+        }
+      }
+    }
+  } catch { /* ignore */ }
   await deleteDoc(doc(db, PRODUCTS_COL, id));
 };
 

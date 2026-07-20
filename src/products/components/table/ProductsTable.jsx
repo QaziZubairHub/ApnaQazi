@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import { formatCurrency, formatDate } from "../../../util/helpers";
 import Badge from "../../../components/ui/Badge";
 import { bulkDeleteProducts, duplicateProduct, updateProduct } from "../../../services/firebase/products";
+import { logAuditEvent } from "../../../services/audit";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const COLUMNS = [
   { key: "name", label: "Product", width: 240, minWidth: 160, sortable: true },
@@ -52,6 +54,7 @@ export function ProductsTable({
   onPageSizeChange,
 }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [density, setDensity] = useState("normal");
   const [columnWidths, setColumnWidths] = useState(() =>
     Object.fromEntries(COLUMNS.map((c) => [c.key, c.width]))
@@ -116,6 +119,7 @@ export function ProductsTable({
   const handleDuplicate = async (id, name) => {
     try {
       await duplicateProduct(id);
+      logAuditEvent(user?.uid || "anonymous", "product_duplicate", "products", null, { id, name });
       toast.success(`Duplicated "${name}"`);
       if (onRefresh) onRefresh();
     } catch {
@@ -126,6 +130,7 @@ export function ProductsTable({
   const handleArchive = async (id, name) => {
     try {
       await updateProduct(id, { status: "archived" });
+      logAuditEvent(user?.uid || "anonymous", "product_archive", "products", null, { id, name });
       toast.success(`Archived "${name}"`);
       if (onRefresh) onRefresh();
     } catch {
@@ -133,10 +138,22 @@ export function ProductsTable({
     }
   };
 
+  const handleRestore = async (id, name) => {
+    try {
+      await updateProduct(id, { status: "active" });
+      logAuditEvent(user?.uid || "anonymous", "product_restore", "products", null, { id, name });
+      toast.success(`Restored "${name}"`);
+      if (onRefresh) onRefresh();
+    } catch {
+      toast.error("Restore failed");
+    }
+  };
+
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
     try {
       await bulkDeleteProducts([id]);
+      logAuditEvent(user?.uid || "anonymous", "product_delete", "products", null, { id, name });
       toast.success(`Deleted "${name}"`);
       if (onRefresh) onRefresh();
     } catch {
@@ -355,13 +372,23 @@ export function ProductsTable({
                           >
                             <Copy size={13} />
                           </button>
-                          <button
-                            onClick={() => handleArchive(p.id, p.name)}
-                            className="w-7 h-7 rounded-[8px] flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                            title="Archive"
-                          >
-                            <Archive size={13} />
-                          </button>
+                          {p.status === "archived" ? (
+                            <button
+                              onClick={() => handleRestore(p.id, p.name)}
+                              className="w-7 h-7 rounded-[8px] flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                              title="Restore"
+                            >
+                              <Archive size={13} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleArchive(p.id, p.name)}
+                              className="w-7 h-7 rounded-[8px] flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                              title="Archive"
+                            >
+                              <Archive size={13} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(p.id, p.name)}
                             className="w-7 h-7 rounded-[8px] flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"

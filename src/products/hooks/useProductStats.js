@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { subscribeProducts } from "../../services/firebase/products";
-import { computeInventoryValue } from "../../components/Admin/ProductDashboardHelpers";
 
 export function useProductStats() {
   const [stats, setStats] = useState({

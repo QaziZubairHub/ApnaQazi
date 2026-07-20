@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { db } from "../../firebase";
+import { useAuth } from "../../contexts/AuthContext";
 
 import {
   collection,
@@ -9,19 +10,22 @@ import {
   getDoc,
   getDocs,
   setDoc,
-  updateDoc,
+  query,
+  where,
 } from "firebase/firestore";
 
 import { genSlug, parseNumber } from "../../util/helpers";
 import { Tag as TagIcon } from "lucide-react";
 import ProductVariantForm from "../forms/ProductVariantForm";
-
+import { logAuditEvent } from "../../services/audit";
+import { adjustStock } from "../../services/inventory";
 
 import {
   getStorage,
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
+  deleteObject,
 } from "firebase/storage";
 
 
@@ -32,6 +36,7 @@ const labelClass = "block text-xs font-semibold text-slate-600 uppercase trackin
 const ProductUpsert = ({ mode = "create" }) => {
   const navigate = useNavigate();
   const params = useParams();
+  const { user } = useAuth();
   const id = mode === "edit" ? params.id : null;
 
   const [loading, setLoading] = useState(mode === "edit");
@@ -182,22 +187,55 @@ const ProductUpsert = ({ mode = "create" }) => {
     }
   };
 
-  const handleRemoveImage = (index) => {
+  const handleRemoveImage = async (index) => {
+    const removed = form.images[index];
+    if (removed && removed.includes("firebasestorage.googleapis.com")) {
+      try {
+        const parts = removed.split("/o/")[1]?.split("?")[0];
+        if (parts) {
+          const storage = getStorage();
+          const decoded = decodeURIComponent(parts);
+          const ref = storageRef(storage, decoded);
+          await deleteObject(ref);
+        }
+      } catch { /* ignore storage errors on remove */ }
+    }
     setForm((p) => ({ ...p, images: p.images.filter((_, i) => i !== index) }));
   };
 
-  const validate = () => {
+  const validate = async () => {
     if (!form.name.trim()) return "Product name is required.";
     if (!form.slug.trim()) return "Slug is required.";
     if (!form.categoryId) return "Category is required.";
     if (!form.brandId) return "Brand is required.";
     if (!form.collectionId) return "Collection is required.";
+    if (!form.price || Number(form.price) <= 0) return "Selling price must be greater than 0.";
+
+    const productsRef = collection(db, "products");
+    const finalSku = form.sku.trim() || `AQ-PROD-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+    if (finalSku) {
+      const skuSnap = await getDocs(query(productsRef, where("sku", "==", finalSku)));
+      if (!skuSnap.empty) {
+        const existing = skuSnap.docs[0];
+        if (existing.id !== id) return `SKU "${finalSku}" is already in use by another product.`;
+      }
+    }
+
+    if (form.slug.trim()) {
+      const slugSnap = await getDocs(query(productsRef, where("slug", "==", form.slug.trim())));
+      if (!slugSnap.empty) {
+        const existing = slugSnap.docs[0];
+        if (existing.id !== id) return `Slug "${form.slug.trim()}" is already in use by another product.`;
+      }
+    }
+
     return "";
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const err = validate();
+    const err = await validate();
     if (err) {
       toast.error(err);
       return;
@@ -261,10 +299,21 @@ const ProductUpsert = ({ mode = "create" }) => {
       if (mode === "create") {
         const ref = doc(collection(db, "products"));
         await setDoc(ref, productPayload);
+        logAuditEvent(user?.uid || "anonymous", "product_create", "products", null, productPayload);
         toast.success("Product created.");
         navigate("/admin/products");
       } else {
+        const prevSnap = await getDoc(doc(db, "products", id));
+        const prevData = prevSnap.exists() ? prevSnap.data() : {};
         await setDoc(doc(db, "products", id), productPayload);
+        logAuditEvent(user?.uid || "anonymous", "product_update", "products", prevData, productPayload);
+
+        const prevQty = Number(prevData.stockQuantity ?? prevData.stock?.quantity ?? 0);
+        const newQty = Number(productPayload.stockQuantity ?? 0);
+        if (prevQty !== newQty) {
+          await adjustStock(id, newQty - prevQty, "Stock update from product edit");
+        }
+
         toast.success("Product updated.");
         navigate("/admin/products");
       }

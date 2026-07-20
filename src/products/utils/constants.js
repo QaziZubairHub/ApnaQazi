@@ -32,6 +32,7 @@ export const DEFAULT_FILTERS = {
   categoryId: "all",
   brandId: "all",
   collectionId: "all",
+  vendor: "",
   status: "all",
   stock: "all",
   featured: false,

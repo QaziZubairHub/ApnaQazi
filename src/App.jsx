@@ -49,6 +49,8 @@ const Cart = lazy(() => import('./components/Cart'))
 
 const Checkout = lazy(() => import('./components/Checkout'))
 const BeltProductPage = lazy(() => import('./components/Beltproductpage'))
+const ProductCreate = lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductCreate })))
+const ProductEdit = lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductEdit })))
 
 const AdminLoginRoute = () => {
   const navigate = useNavigate()
@@ -109,8 +111,8 @@ const App = () => {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="products" element={<ProductsPage />} />
                 <Route path="product" element={<Navigate to="/admin/products" replace />} />
-                <Route path="product/create" element={lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductCreate })))} />
-                <Route path="product/:id/edit" element={lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductEdit })))} />
+                <Route path="product/create" element={<ProductCreate />} />
+                <Route path="product/:id/edit" element={<ProductEdit />} />
                 <Route path="order" element={<Order />} />
                 <Route path="customers" element={<Customers />} />
                 <Route path="analytics" element={<Analytics />} />
