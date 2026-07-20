@@ -221,7 +221,7 @@ const Layout = ({ children }) => {
             <FloatingWhatsApp />
 
             {/* =========== Main Content =========== */}
-            <main className={`flex-1 ${location.pathname === '/' ? '-mt-[72px]' : ''}`}>
+            <main className="flex-1">
                 {children}
             </main>
 

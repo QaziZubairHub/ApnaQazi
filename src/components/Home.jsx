@@ -36,6 +36,9 @@ import shampoImg      from "../assets/shampo.jpg";
 import masalaImg      from "../assets/masala.jpg";
 import toiletItemImg  from "../assets/toiletitem.png";
 import Belt1Img from "../assets/Belt1.png";
+import Belt2Img from "../assets/Belt2.jpg";
+import leatherjac1Img from "../assets/leatherjac1.png";
+import leatherjac3Img from "../assets/leatherjac3.png";
 import beltcover1Img from "../assets/beltcover1.jpg";
 
 // Data Arrays
@@ -56,7 +59,6 @@ const categories = [
 
   { id: 5, title: "Watches",       image: WatchesImg,    link: "/watches" },
   { id: 6, title: "Sunglasses",      image: SunglassImg,   link: "/sunglasses" },
-  { id: 7, title: "Jackets", image: "https://z-cdn-media.chatglm.cn/files/c5b7d69a-e46d-4345-9d5a-da2ec27db480.png?auth_key=1882559984-224e6ca4307c4ab2b743a340e5ed5654-0-2cb86a993c86fa1d9ad04f24e1fae1d5", link: "/jackets" },
 ];
 
 
@@ -170,11 +172,10 @@ const Home = () => {
   const categoryWord  = useTypewriter('Category',  110, 2000);
   const jewelleryWord = useTypewriter('Jewellery', 110, 2000);
   const sunglassWord  = useTypewriter('Sunglasses', 110, 2000);
-  const beltWord      = useTypewriter('Belts', 110, 2000);
+  const beltWord      = useTypewriter('Leather Collection', 110, 2000);
   const watchWord     = useTypewriter('Watches', 110, 2000);
   const clothesWord   = useTypewriter('Clothes', 110, 2000);
   const groceryWord   = useTypewriter('Grocery', 110, 2000);
-  const jacketWord    = useTypewriter('Leather Jacket', 110, 2000);
 
   return (
     <Layout>
@@ -267,14 +268,20 @@ const Home = () => {
 
           <div className="mt-16 md:mt-24">
             <SectionHeading prefix="Shop by" typingWord={beltWord} />
+            <p className="text-center text-gray-400 text-[11px] md:text-[13px] tracking-[0.15em] uppercase -mt-6 mb-8 md:mb-12">
+              Premium Belts • Jackets • Wallets • Accessories
+            </p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-              {beltProducts.map((prod) => (
+              {[
+                { id: 1, name: 'Premium Leather Belt', modelSet: "Premium Collection", image: BeltImg, badge: "New" },
+                { id: 2, name: 'Luxury Leather Jacket', modelSet: "Premium Collection", image: leatherjac1Img, badge: "Sale" },
+                { id: 3, name: 'Classic Brown Leather Belt', modelSet: "Premium Collection", image: Belt2Img, badge: "Premium" },
+                { id: 4, name: 'Modern Black Leather Jacket', modelSet: "Premium Collection", image: leatherjac3Img, badge: "Exclusive" },
+              ].map((prod) => (
                 <ProductCard key={prod.id} prod={prod} linkTo={`/belts`} />
               ))}
             </div>
-
-            <ViewAllBtn to="/belts" text="View All Belts" />
-
+            <ViewAllBtn to="/belts" text="View All Leather Collection" />
           </div>
 
           <div className="mt-16 md:mt-24">
@@ -301,22 +308,6 @@ const Home = () => {
             ].map((prod) => <ProductCard key={prod.id} prod={prod} linkTo="/grocery" />)}
           </div>
           <ViewAllBtn to="/grocery" text="View All Grocery" />
-        </div>
-
-        <div className="w-full px-4 md:px-0 md:w-11/12 mx-auto mt-16 md:mt-24">
-          <SectionHeading prefix="Shop by" typingWord={jacketWord} />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-            {[
-              { id: 1, name: 'Black Zipper Leather Jacket', modelSet: "Winter Collection 2026", image: "https://z-cdn-media.chatglm.cn/files/c5b7d69a-e46d-4345-9d5a-da2ec27db480.png?auth_key=1882559984-224e6ca4307c4ab2b743a340e5ed5654-0-2cb86a993c86fa1d9ad04f24e1fae1d5" },
-              { id: 2, name: 'Brown Suede Casual Jacket', modelSet: "Winter Collection 2026", image: "https://z-cdn-media.chatglm.cn/files/1c4a9a7f-5c98-4e23-ac8a-04b2eb2b2c61.png?auth_key=1882559984-c231ab6984d74db6bc358f9ec103552e-0-cdb1160d27d22d0db09f576772e50a6a" },
-              { id: 3, name: 'Black Hooded Leather Jacket', modelSet: "Winter Collection 2026", image: "https://z-cdn-media.chatglm.cn/files/75426710-9b85-4576-8082-dcb2ea772ad8.png?auth_key=1882559984-f733b14213d44b789caf1498187f246f-0-6b9e61bc35406203a3be69471c0d1147" },
-              { id: 4, name: 'BJ Premium Black Jacket', modelSet: "Winter Collection 2026", image: "https://z-cdn-media.chatglm.cn/files/10479f21-a60e-4d1b-ab05-b52179d2add9.png?auth_key=1882559984-2354eae5b6bb4638a175252466975038-0-d831581397fb8ddb9233cc0106ed1c39" },
-            ].map((prod) => <ProductCard key={prod.id} prod={prod} linkTo="/jackets" />)}
-
-          </div>
-          <div className="text-center mt-12 pb-4">
-            <ViewAllBtn to="/leather-jackets" text="View All Leather Jackets" />
-          </div>
         </div>
 
       </section>
