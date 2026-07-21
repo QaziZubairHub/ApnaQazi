@@ -23,6 +23,7 @@ export const useFirestore = (collectionName, queryConstraints = []) => {
     );
 
     return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collectionName, JSON.stringify(queryConstraints)]);
 
   const add = async (data) => {

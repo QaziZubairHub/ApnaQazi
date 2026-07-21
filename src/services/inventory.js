@@ -26,13 +26,6 @@ export async function adjustStock(productId, adjustment, reason = "") {
     const currentQty = Number(data.stockQuantity ?? data.stock?.quantity ?? 0);
     const newQty = currentQty + adjustment;
 
-    const stockObj = {
-      quantity: newQty,
-      lowStockThreshold: Number(data.lowStockThreshold ?? data.stock?.lowStockThreshold ?? 5),
-      trackInventory: typeof data.trackInventory === "boolean" ? data.trackInventory : (data.stock?.trackInventory ?? true),
-      allowBackorders: typeof data.allowBackorders === "boolean" ? data.allowBackorders : (data.stock?.allowBackorders ?? false),
-    };
-
     // Update the product document with new quantities, keeping the rest of the document as is
     transaction.update(productRef, {
       stockQuantity: newQty,

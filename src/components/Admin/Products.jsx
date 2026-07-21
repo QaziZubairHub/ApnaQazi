@@ -8,6 +8,7 @@ import {
   Archive,
   Copy,
   Eye,
+  Pencil,
   Image as ImageIcon,
   RefreshCw,
   SlidersHorizontal,
@@ -27,7 +28,7 @@ import Card from "../ui/Card";
 import StatCard from "../ui/StatCard";
 import { StatCardSkeleton } from "../ui/Skeleton";
 import Badge from "../ui/Badge";
-import Button from "../ui/Button";
+
 import EmptyState from "../ui/EmptyState";
 
 import {
@@ -104,8 +105,6 @@ const Products = () => {
   const [pageItems, setPageItems] = useState([]);
   const [page, setPage] = useState(0);
 
-  const [viewMode, setViewMode] = useState("table");
-
   // Search
   const [searchText, setSearchText] = useState("");
 
@@ -132,10 +131,6 @@ const Products = () => {
   const [stockStatuses, setStockStatuses] = useState([]);
 
   const [optionsLoading, setOptionsLoading] = useState(false);
-  const [optionsError, setOptionsError] = useState(null);
-
-  const [statusLoading, setStatusLoading] = useState(false);
-  const [stockLoading, setStockLoading] = useState(false);
 
 
 
@@ -143,9 +138,7 @@ const Products = () => {
   // Selection
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Import state
-  const fileInputRef = useState(null);
-  // NOTE: fileInputRef is not used by ref hook to avoid breaking constraints.
+  // Import state - ref is not used to avoid breaking constraints
 
   const activeFiltersCount = useMemo(() => {
     const f = filters;
@@ -190,7 +183,6 @@ const Products = () => {
     const run = async () => {
       try {
         setOptionsLoading(true);
-        setOptionsError(null);
 
         // Real-time listeners for dropdown options
         const unsubCats = subscribeCollections(
@@ -232,18 +224,13 @@ const Products = () => {
           (statuses) => {
             if (cancelled) return;
             setProductStatuses(statuses);
-            setStatusLoading(false);
           }
         );
 
         const unsubStock = subscribeDistinctStockStatuses((buckets) => {
           if (cancelled) return;
           setStockStatuses(buckets);
-          setStockLoading(false);
         });
-
-        setStatusLoading(true);
-        setStockLoading(true);
 
         return () => {
           unsubCats?.();
@@ -253,9 +240,8 @@ const Products = () => {
           unsubStock?.();
         };
 
-      } catch (e) {
+      } catch {
         if (cancelled) return;
-        setOptionsError(e?.message || "Failed to load filters.");
         setOptionsLoading(false);
       }
     };
@@ -338,7 +324,7 @@ const Products = () => {
           : null;
         const dateTo = filters.dateCreatedTo ? parseDateValue(filters.dateCreatedTo) : null;
 
-        const { items, nextCursor } = await fetchProductsPage({
+        const { items } = await fetchProductsPage({
           pageSize: rowsPerPage,
           cursor,
           orderField: "createdAt",
@@ -566,7 +552,7 @@ const Products = () => {
 
       // Upsert minimal fields: for full spec production you should use ProductUpsert logic.
       const { db } = await import("../../firebase");
-      const { collection, doc, getDocs, query, where, updateDoc, setDoc, writeBatch } = await import("firebase/firestore");
+      const { collection, doc, getDocs, query, where, writeBatch } = await import("firebase/firestore");
 
       const batch = writeBatch(db);
       const now = new Date().toISOString();

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Eye, Pencil, Copy, Archive, Trash2, Package, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { formatCurrency, formatDate } from "../../../util/helpers";
+import { formatCurrency, formatDate, getImageUrl } from "../../../util/helpers";
 import Badge from "../../../components/ui/Badge";
 import { bulkDeleteProducts, duplicateProduct, updateProduct } from "../../../services/firebase/products";
 import { logAuditEvent } from "../../../services/audit";
@@ -209,8 +209,8 @@ export function ProductsTable({
         tabIndex={0}
         className="rounded-[16px] border border-slate-200 bg-white overflow-hidden outline-none focus:ring-2 focus:ring-primary/30"
       >
-        <div className="overflow-auto max-h-[70vh]">
-          <table className="w-full text-sm text-left border-collapse">
+        <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+          <table className="min-w-max text-sm text-left border-collapse w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80">
                 <th className="sticky top-0 z-20 bg-slate-50/80 px-3 py-3 w-10 border-b border-slate-100">
@@ -302,7 +302,7 @@ export function ProductsTable({
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-[10px] bg-slate-100 overflow-hidden shrink-0">
                             {p.images?.[0] ? (
-                              <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                              <img src={getImageUrl(p.images[0])} alt={p.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-slate-300">
                                 <Package size={14} />
@@ -321,10 +321,10 @@ export function ProductsTable({
                       </td>
                       <td className={`px-3 ${densityClass} text-xs text-slate-600`} style={{ width: columnWidths.sku }}>{p.sku || "—"}</td>
                       <td className={`px-3 ${densityClass} text-xs text-slate-600`} style={{ width: columnWidths.category }}>
-                        {p.categoryName || p.categoryId || "—"}
+                        {p.categoryName || p._categoryName || p.categoryId || "—"}
                       </td>
                       <td className={`px-3 ${densityClass} text-xs text-slate-600`} style={{ width: columnWidths.brand }}>
-                        {p.brandName || p.brandId || "—"}
+                        {p.brandName || p._brandName || p.brandId || "—"}
                       </td>
                       <td className={`px-3 ${densityClass} text-xs font-semibold text-slate-800 text-right`} style={{ width: columnWidths.price }}>
                         {p.price != null ? formatCurrency(p.price) : "—"}

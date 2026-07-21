@@ -14,11 +14,15 @@ import {
   where,
 } from "firebase/firestore";
 
-import { genSlug, parseNumber } from "../../util/helpers";
+import { genSlug, parseNumber, getImageUrl, normalizeImages } from "../../util/helpers";
 import { Tag as TagIcon } from "lucide-react";
 import ProductVariantForm from "../forms/ProductVariantForm";
 import { logAuditEvent } from "../../services/audit";
 import { adjustStock } from "../../services/inventory";
+import { generateJsonLd, generateMetaTags } from "../../services/seoService";
+import { useCategories } from "../../products/hooks/useCategories";
+import { useBrands } from "../../products/hooks/useBrands";
+import { useCollections } from "../../products/hooks/useCollections";
 
 import {
   getStorage,
@@ -42,9 +46,9 @@ const ProductUpsert = ({ mode = "create" }) => {
   const [loading, setLoading] = useState(mode === "edit");
 
   // meta
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [collections, setCollections] = useState([]);
+  const { categories } = useCategories();
+  const { brands } = useBrands();
+  const { collections } = useCollections();
 
   // form
   const [form, setForm] = useState({
@@ -88,31 +92,6 @@ const ProductUpsert = ({ mode = "create" }) => {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadMeta = async () => {
-      try {
-        const [cats, br, colls] = await Promise.all([
-          getDocs(collection(db, "categories")),
-          getDocs(collection(db, "brands")),
-          getDocs(collection(db, "collections")),
-        ]);
-        if (cancelled) return;
-        setCategories(cats.docs.map((d) => ({ id: d.id, ...d.data() })));
-        setBrands(br.docs.map((d) => ({ id: d.id, ...d.data() })));
-        setCollections(colls.docs.map((d) => ({ id: d.id, ...d.data() })));
-      } catch {
-        // ignore
-      }
-    };
-
-    loadMeta();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     const loadProduct = async () => {
       if (!id) return;
       setLoading(true);
@@ -141,7 +120,7 @@ const ProductUpsert = ({ mode = "create" }) => {
             ogImage: data?.seo?.ogImage ?? "",
             urlSlug: data?.seo?.urlSlug ?? data?.slug ?? "",
           },
-          images: Array.isArray(data?.images) ? data.images : [],
+          images: normalizeImages(data?.images),
           variants: Array.isArray(data?.variants) ? data.variants : [],
           createdAt: data?.createdAt || "",
         }));
@@ -170,16 +149,25 @@ const ProductUpsert = ({ mode = "create" }) => {
     setUploading(true);
     try {
       const storage = getStorage();
-      const uploadedUrls = [];
+      const uploaded = [];
       for (const file of files) {
         const path = `productImages/${Date.now()}-${file.name}`;
         const ref = storageRef(storage, path);
         await uploadBytes(ref, file);
         const url = await getDownloadURL(ref);
-        uploadedUrls.push(url);
+        uploaded.push(url);
       }
-      setForm((p) => ({ ...p, images: [...p.images, ...uploadedUrls] }));
-      toast.success(`Uploaded ${uploadedUrls.length} image(s).`);
+      setForm((p) => {
+        const currentLen = p.images.length;
+        const newImgs = uploaded.map((url, i) => ({
+          id: `img_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+          url,
+          order: currentLen + i,
+          isFeatured: currentLen === 0 && i === 0 && !p.images.some((x) => getImageUrl(x) ? x.isFeatured : false),
+        }));
+        return { ...p, images: [...p.images, ...newImgs] };
+      });
+      toast.success(`Uploaded ${uploaded.length} image(s).`);
     } catch {
       toast.error("Image upload failed.");
     } finally {
@@ -189,9 +177,10 @@ const ProductUpsert = ({ mode = "create" }) => {
 
   const handleRemoveImage = async (index) => {
     const removed = form.images[index];
-    if (removed && removed.includes("firebasestorage.googleapis.com")) {
+    const removedUrl = getImageUrl(removed);
+    if (removedUrl && removedUrl.includes("firebasestorage.googleapis.com")) {
       try {
-        const parts = removed.split("/o/")[1]?.split("?")[0];
+        const parts = removedUrl.split("/o/")[1]?.split("?")[0];
         if (parts) {
           const storage = getStorage();
           const decoded = decodeURIComponent(parts);
@@ -206,9 +195,6 @@ const ProductUpsert = ({ mode = "create" }) => {
   const validate = async () => {
     if (!form.name.trim()) return "Product name is required.";
     if (!form.slug.trim()) return "Slug is required.";
-    if (!form.categoryId) return "Category is required.";
-    if (!form.brandId) return "Brand is required.";
-    if (!form.collectionId) return "Collection is required.";
     if (!form.price || Number(form.price) <= 0) return "Selling price must be greater than 0.";
 
     const productsRef = collection(db, "products");
@@ -235,8 +221,10 @@ const ProductUpsert = ({ mode = "create" }) => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    console.log("[ProductUpsert] handleSave called, mode:", mode);
     const err = await validate();
     if (err) {
+      console.warn("[ProductUpsert] Validation failed:", err);
       toast.error(err);
       return;
     }
@@ -249,6 +237,32 @@ const ProductUpsert = ({ mode = "create" }) => {
       if (!finalSku) {
         finalSku = `AQ-PROD-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       }
+
+      const findName = (list, id) => {
+        const match = list.find((x) => x.id === id);
+        return match ? (match.name || "") : "";
+      };
+
+      const catName = findName(categories, form.categoryId);
+      const brandName = findName(brands, form.brandId);
+      const collNames = form.collectionId
+        ? [findName(collections, form.collectionId)].filter(Boolean)
+        : [];
+
+      const tags = form.tags
+        ? (typeof form.tags === "string" ? form.tags.split(",").map((t) => t.trim()).filter(Boolean) : form.tags)
+        : [];
+
+      const searchTokens = [
+        form.name, form.slug, finalSku, form.barcode, form.vendor,
+        ...tags, catName, brandName, ...collNames,
+        form.shortDescription, form.seo.metaTitle, form.seo.keywords,
+      ]
+        .filter(Boolean)
+        .flatMap((s) => String(s).toLowerCase().split(/[\s,-]+/))
+        .filter(Boolean);
+
+      const _search = [...new Set(searchTokens)];
 
       const productPayload = {
         name: form.name.trim(),
@@ -292,13 +306,24 @@ const ProductUpsert = ({ mode = "create" }) => {
           urlSlug: form.seo.urlSlug.trim() || form.slug.trim() || "",
         },
 
+        _search,
+        _categoryName: catName,
+        _brandName: brandName,
+        _collectionNames: collNames,
+
         updatedAt: now,
         createdAt: mode === "create" ? now : (form.createdAt || now),
       };
 
+      const autoMeta = generateMetaTags(productPayload);
+      productPayload.seo = { ...productPayload.seo, ...autoMeta };
+      productPayload.jsonLd = generateJsonLd(productPayload);
+
       if (mode === "create") {
         const ref = doc(collection(db, "products"));
+        console.log("[ProductUpsert] Writing to Firestore collection: products", { id: ref.id, payload: productPayload });
         await setDoc(ref, productPayload);
+        console.log("[ProductUpsert] Write SUCCESS for product:", ref.id);
         logAuditEvent(user?.uid || "anonymous", "product_create", "products", null, productPayload);
         toast.success("Product created.");
         navigate("/admin/products");
@@ -318,6 +343,7 @@ const ProductUpsert = ({ mode = "create" }) => {
         navigate("/admin/products");
       }
     } catch (err) {
+      console.error("[ProductUpsert] Save FAILED:", err);
       toast.error("Save failed: " + (err.message || "Unknown error"));
     } finally {
       setLoading(false);
@@ -432,18 +458,24 @@ const ProductUpsert = ({ mode = "create" }) => {
                 </div>
               ) : (
                 <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-                  {form.images.map((url, idx) => (
-                    <div key={url + idx} className="relative rounded-[12px] overflow-hidden border border-slate-200">
-                      <img src={url} alt={`Product image ${idx + 1}`} className="w-full h-24 object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(idx)}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-700 flex items-center justify-center border border-slate-200"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                  {form.images.map((img, idx) => {
+                    const imgUrl = getImageUrl(img);
+                    return (
+                      <div key={img.id || imgUrl + idx} className="relative rounded-[12px] overflow-hidden border border-slate-200">
+                        <img src={imgUrl} alt={`Product image ${idx + 1}`} className="w-full h-24 object-cover" />
+                        {img.isFeatured && (
+                          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary/80 text-white text-[10px] font-semibold">Featured</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-700 flex items-center justify-center border border-slate-200"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

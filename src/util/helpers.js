@@ -42,6 +42,32 @@ export const getAvatarColor = (name = "") => {
   return colors[Math.abs(hash) % colors.length];
 };
 
+// ─── Image helpers (handles legacy string[] and new object[] formats) ───
+
+// Extract a URL string from an image entry that may be a string or {url, ...}
+export const getImageUrl = (img) => {
+  if (!img) return "";
+  if (typeof img === "string") return img;
+  if (img?.url) return img.url;
+  return "";
+};
+
+// Normalize an images array to always be [{id, url, order, isFeatured}, ...]
+export const normalizeImages = (images) => {
+  if (!Array.isArray(images)) return [];
+  return images.map((img, i) => {
+    if (typeof img === "string") {
+      return { id: `img_${Date.now()}_${i}`, url: img, order: i, isFeatured: i === 0 };
+    }
+    return {
+      id: img.id || `img_${Date.now()}_${i}`,
+      url: img.url || "",
+      order: typeof img.order === "number" ? img.order : i,
+      isFeatured: img.isFeatured === true || (typeof img.order !== "number" && i === 0),
+    };
+  }).filter((img) => img.url);
+};
+
 export const truncateId = (id, len = 8) => {
   if (!id) return "—";
   return `#${id.slice(0, len).toUpperCase()}`;

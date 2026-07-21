@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -91,7 +91,7 @@ const ProductList = () => {
     };
     el.addEventListener("keydown", onKey);
     return () => el.removeEventListener("keydown", onKey);
-  }, [products, activeRowIndex]);
+  }, [products, activeRowIndex, navigate]);
 
   useEffect(() => {
     let unsub = false;
@@ -232,9 +232,9 @@ const ProductList = () => {
 
   const allOnPageSelected = products.length > 0 && selectedIds.length === products.length;
 
-  const toggleOne = (id) => {
+  function toggleOne(id) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
+  }
 
   const toggleAll = () => {
     if (allOnPageSelected) setSelectedIds([]);
@@ -623,7 +623,6 @@ const CardTable = ({
   products,
   selectedIds,
   allOnPageSelected,
-  activeRowIndex,
   tableWrapRef,
   onToggleAll,
   onToggleOne,

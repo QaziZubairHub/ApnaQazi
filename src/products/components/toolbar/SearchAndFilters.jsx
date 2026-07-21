@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { Search, RefreshCw, Filter, X, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { subscribeCollections, subscribeDistinctProductStatuses, subscribeDistinctStockStatuses } from "../../../services/firebase/products";
+import { subscribeDistinctProductStatuses, subscribeDistinctStockStatuses } from "../../../services/firebase/products";
+import { useCategories } from "../../hooks/useCategories";
+import { useBrands } from "../../hooks/useBrands";
+import { useCollections } from "../../hooks/useCollections";
 
 export function SearchAndFilters({ filters, onSearchChange, onFiltersChange, resetFilters, activeFilterCount }) {
   const [searchValue, setSearchValue] = useState(filters.search || "");
   const [showFilters, setShowFilters] = useState(false);
 
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [collections, setCollections] = useState([]);
+  const { categories } = useCategories();
+  const { brands } = useBrands();
+  const { collections } = useCollections();
   const [productStatuses, setProductStatuses] = useState([]);
   const [stockStatuses, setStockStatuses] = useState([]);
-  const [optionsLoading, setOptionsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -20,24 +22,6 @@ export function SearchAndFilters({ filters, onSearchChange, onFiltersChange, res
 
     const load = async () => {
       try {
-        const unsubCats = subscribeCollections("categories", (items) => {
-          if (cancelled) return;
-          setCategories(items.map((x) => ({ id: x.id, name: x.name ?? x.title ?? x.slug ?? x.id })).filter((x) => x.name));
-        });
-        unsubs.push(unsubCats);
-
-        const unsubBrands = subscribeCollections("brands", (items) => {
-          if (cancelled) return;
-          setBrands(items.map((x) => ({ id: x.id, name: x.name ?? x.title ?? x.slug ?? x.id })).filter((x) => x.name));
-        });
-        unsubs.push(unsubBrands);
-
-        const unsubColls = subscribeCollections("collections", (items) => {
-          if (cancelled) return;
-          setCollections(items.map((x) => ({ id: x.id, name: x.name ?? x.title ?? x.slug ?? x.id })).filter((x) => x.name));
-        });
-        unsubs.push(unsubColls);
-
         const unsubStatuses = subscribeDistinctProductStatuses((statuses) => {
           if (cancelled) return;
           setProductStatuses(statuses);
@@ -49,10 +33,8 @@ export function SearchAndFilters({ filters, onSearchChange, onFiltersChange, res
           setStockStatuses(buckets);
         });
         unsubs.push(unsubStock);
-
-        setOptionsLoading(false);
       } catch {
-        setOptionsLoading(false);
+        // ignore
       }
     };
 
@@ -70,12 +52,11 @@ export function SearchAndFilters({ filters, onSearchChange, onFiltersChange, res
     onSearchChange(val);
   };
 
-  const FilterSelect = ({ label, value, onChange, options, loading }) => (
+  const FilterSelect = ({ label, value, onChange, options }) => (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      disabled={loading}
-      className="px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 disabled:opacity-50 min-w-[140px]"
+      className="px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 min-w-[140px]"
     >
       <option value="all">All {label}</option>
       {options.map((opt) => (
@@ -149,35 +130,30 @@ export function SearchAndFilters({ filters, onSearchChange, onFiltersChange, res
                 value={filters.categoryId}
                 onChange={(v) => onFiltersChange({ categoryId: v })}
                 options={categories}
-                loading={optionsLoading}
               />
               <FilterSelect
                 label="Brands"
                 value={filters.brandId}
                 onChange={(v) => onFiltersChange({ brandId: v })}
                 options={brands}
-                loading={optionsLoading}
               />
               <FilterSelect
                 label="Collections"
                 value={filters.collectionId}
                 onChange={(v) => onFiltersChange({ collectionId: v })}
                 options={collections}
-                loading={optionsLoading}
               />
               <FilterSelect
                 label="Status"
                 value={filters.status}
                 onChange={(v) => onFiltersChange({ status: v })}
                 options={productStatuses}
-                loading={optionsLoading}
               />
               <FilterSelect
                 label="Stock"
                 value={filters.stock}
                 onChange={(v) => onFiltersChange({ stock: v })}
                 options={stockStatuses.map((s) => ({ id: s, name: s.charAt(0).toUpperCase() + s.slice(1) }))}
-                loading={optionsLoading}
               />
 
               <label className="inline-flex items-center gap-2 px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700 cursor-pointer hover:bg-slate-50">

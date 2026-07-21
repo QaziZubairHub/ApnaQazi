@@ -160,7 +160,7 @@ const Layout = () => {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className={`flex-1 lg:transition-all duration-300 ${collapsed ? "lg:ml-[72px]" : "lg:ml-[280px]"}`}>
+      <div className={`flex-1 min-w-0 lg:transition-all duration-300 ${collapsed ? "lg:ml-[72px]" : "lg:ml-[280px]"}`}>
         {/* Top Navbar */}
         <header className="glass sticky top-0 z-40 px-4 lg:px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">

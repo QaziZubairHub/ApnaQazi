@@ -198,12 +198,41 @@ export const bulkDeleteProducts = async (ids) => {
   }
 };
 
+const buildSearchFields = async (data) => {
+  const catName = data.categoryId
+    ? (await getDoc(doc(db, "categories", data.categoryId)).then((s) => s.exists() ? s.data().name || "" : ""))
+    : "";
+  const brandName = data.brandId
+    ? (await getDoc(doc(db, "brands", data.brandId)).then((s) => s.exists() ? s.data().name || "" : ""))
+    : "";
+  const collName = data.collectionId
+    ? (await getDoc(doc(db, "collections", data.collectionId)).then((s) => s.exists() ? s.data().name || "" : ""))
+    : "";
+  const collNames = collName ? [collName] : [];
+  const tags = Array.isArray(data.tags) ? data.tags : [];
+  const tokens = [
+    data.name, data.slug, data.sku, data.barcode, data.vendor,
+    ...tags, catName, brandName, ...collNames,
+    data.shortDescription,
+  ]
+    .filter(Boolean)
+    .flatMap((s) => String(s).toLowerCase().split(/[\s,-]+/))
+    .filter(Boolean);
+  return {
+    _search: [...new Set(tokens)],
+    _categoryName: catName,
+    _brandName: brandName,
+    _collectionNames: collNames,
+  };
+};
+
 export const duplicateProduct = async (id) => {
   const snap = await getDoc(doc(db, PRODUCTS_COL, id));
   if (!snap.exists()) throw new Error("Product not found");
   const data = snap.data();
   const now = new Date().toISOString();
-  const payload = { ...data, createdAt: now, updatedAt: now };
+  const searchFields = await buildSearchFields(data);
+  const payload = { ...data, ...searchFields, createdAt: now, updatedAt: now };
   const ref = doc(collection(db, PRODUCTS_COL));
   await setDoc(ref, payload);
   return { id: ref.id };
@@ -213,6 +242,8 @@ export const updateProduct = async (id, patch) => {
   await updateDoc(doc(db, PRODUCTS_COL, id), { ...patch, updatedAt: new Date().toISOString() });
 };
 
+const imgUrl = (entry) => (typeof entry === "string" ? entry : (entry?.url || ""));
+
 export const deleteProduct = async (id) => {
   try {
     const snap = await getDoc(doc(db, PRODUCTS_COL, id));
@@ -220,8 +251,9 @@ export const deleteProduct = async (id) => {
       const { images } = snap.data();
       if (images?.length) {
         const { deleteFile } = await import("../storage");
-        for (const url of images) {
+        for (const entry of images) {
           try {
+            const url = imgUrl(entry);
             const path = url.split("/o/")[1]?.split("?")[0];
             if (path) {
               const decodedPath = decodeURIComponent(path);

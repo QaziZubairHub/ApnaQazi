@@ -35,7 +35,6 @@ import shopingGroImg  from "../assets/shopinggro.jpg";
 import shampoImg      from "../assets/shampo.jpg";
 import masalaImg      from "../assets/masala.jpg";
 import toiletItemImg  from "../assets/toiletitem.png";
-import Belt1Img from "../assets/Belt1.png";
 import Belt2Img from "../assets/Belt2.jpg";
 import leatherjac1Img from "../assets/leatherjac1.png";
 import leatherjac3Img from "../assets/leatherjac3.png";
@@ -80,12 +79,6 @@ const jewelleryProducts = [
   { id: 2, name: "Diamond Drop Earrings", modelSet: "Summer 2026 - 2027", image: earingImg, badge: "Sale"},
   { id: 3, name: "Luxury Jewellery Set", modelSet:  "Summer 2026 - 2027", image: jewelleryImg, badge: "Premium"},
   { id: 4, name: "Rose Gold Minimalist Ring", modelSet: "Summer 2026 - 2027", image: ringImg, badge: "Exclusive"},
-];
-const beltProducts = [
-  { id: 1, name: "Classic Leather Belt", modelSet: "Summer 2026", image: BeltImg, badge: "New" },
-  { id: 2, name: "Casual Web Belt", modelSet: "Summer 2026", image: Belt1Img, badge: "Sale" },
-  { id: 3, name: "Casual Belt", modelSet: "Summer 2026", image: BeltImg, badge: "Premium" },
-  { id: 4, name: "Formal Belt", modelSet: "Summer 2026", image: BeltImg, badge: "Exclusive" },
 ];
 const watchProducts = [
   { id: 1, name: "Classic Watch", modelSet: "Summer 2026", image: WatchesImg, badge: "New" },

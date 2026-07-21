@@ -61,7 +61,18 @@ export const exportToJSON = (products, filename = "products-export.json") => {
   downloadFile(filename, json, "application/json");
 };
 
-export const exportToExcel = (products, filename = "products-export.xls") => {
+export const exportToExcel = async (products, filename = "products-export.xlsx") => {
   if (!products?.length) return;
-  exportToCSV(products, filename.replace(/\.xlsx?$/, ".xls"));
+  const XLSX = await import("xlsx");
+  const header = EXPORT_HEADERS.map((h) => h.label);
+  const rows = products.map((p) =>
+    EXPORT_HEADERS.map((h) => {
+      const isDate = h.key === "createdAt" || h.key === "updatedAt";
+      return isDate ? formatDate(p[h.key]) : p[h.key] ?? "";
+    })
+  );
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Products");
+  XLSX.writeFile(wb, filename);
 };

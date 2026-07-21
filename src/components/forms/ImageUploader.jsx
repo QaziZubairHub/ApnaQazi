@@ -22,7 +22,7 @@ const ImageUploader = ({ mainImage, galleryImages, onMainImageChange, onGalleryC
         onGalleryChange([...(galleryImages || []), ...urls]);
       }
       showToast(`${urls.length} image(s) uploaded successfully`, 'success');
-    } catch (error) {
+    } catch {
       showToast('Failed to upload images', 'error');
     }
   };
@@ -36,7 +36,7 @@ const ImageUploader = ({ mainImage, galleryImages, onMainImageChange, onGalleryC
         onGalleryChange(galleryImages.filter((img) => img !== url));
       }
       showToast('Image deleted successfully', 'success');
-    } catch (error) {
+    } catch {
       showToast('Failed to delete image', 'error');
     }
   };

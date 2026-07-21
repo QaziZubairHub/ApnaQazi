@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Upload, Download, Trash2, Archive, Eye, EyeOff, Star, Copy, ChevronDown, Tag, Boxes, DollarSign, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { bulkUpdateProducts, bulkDeleteProducts, duplicateProduct, subscribeCollections } from "../../../services/firebase/products";
+import { bulkUpdateProducts, bulkDeleteProducts, duplicateProduct } from "../../../services/firebase/products";
 import { exportToCSV, exportToJSON, exportToExcel } from "../../utils/export";
 import { parseProductsFromCSV, commitProducts } from "../../utils/import";
 import Card from "../../../components/ui/Card";
 import { logAuditEvent } from "../../../services/audit";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useCategories } from "../../hooks/useCategories";
+import { useBrands } from "../../hooks/useBrands";
+import { useCollections } from "../../hooks/useCollections";
 
 export function TableToolbar({ selectedIds, products, allProducts = [], onRefresh, clearSelection }) {
   const navigate = useNavigate();
@@ -18,26 +21,18 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
   const [showFieldMenu, setShowFieldMenu] = useState(false);
   const [fieldTarget, setFieldTarget] = useState(null);
   const [fieldValue, setFieldValue] = useState("");
-  const [options, setOptions] = useState({ categories: [], brands: [], collections: [] });
+  const { categories } = useCategories();
+  const { brands } = useBrands();
+  const { collections } = useCollections();
   const selectedCount = selectedIds.length;
 
   const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
-
-  const loadOptions = () => {
-    const unsubs = [
-      subscribeCollections("categories", (items) => setOptions((o) => ({ ...o, categories: items.map((x) => ({ id: x.id, name: x.name ?? x.title ?? x.slug ?? x.id })).filter((x) => x.name) }))),
-      subscribeCollections("brands", (items) => setOptions((o) => ({ ...o, brands: items.map((x) => ({ id: x.id, name: x.name ?? x.title ?? x.slug ?? x.id })).filter((x) => x.name) }))),
-      subscribeCollections("collections", (items) => setOptions((o) => ({ ...o, collections: items.map((x) => ({ id: x.id, name: x.name ?? x.title ?? x.slug ?? x.id })).filter((x) => x.name) }))),
-    ];
-    return () => unsubs.forEach((u) => u?.());
-  };
 
   const openFieldMenu = (target) => {
     setFieldTarget(target);
     setFieldValue("");
     setShowFieldMenu(true);
     setShowBulkMenu(false);
-    loadOptions();
   };
 
   const applyFieldUpdate = async () => {
@@ -135,7 +130,7 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
 
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const handleExport = (scope, format) => {
+  const handleExport = async (scope, format) => {
     setShowExportMenu(false);
     setExporting(true);
     try {
@@ -147,7 +142,7 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
       const stamp = new Date().toISOString().slice(0, 10);
       const base = scope === "selected" ? `products-selected-${stamp}` : `products-${stamp}`;
       if (format === "json") exportToJSON(data, `${base}.json`);
-      else if (format === "excel") exportToExcel(data, `${base}.xls`);
+      else if (format === "excel") await exportToExcel(data, `${base}.xlsx`);
       else exportToCSV(data, `${base}.csv`);
       toast.success(`Exported ${data.length} products (${format.toUpperCase()})`);
     } catch {
@@ -158,6 +153,7 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
   };
 
   const [importPreview, setImportPreview] = useState(null);
+  const [importProgress, setImportProgress] = useState({ total: 0, current: 0 });
 
   const handleImport = async (e) => {
     const file = e.target.files?.[0];
@@ -189,8 +185,11 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
   const confirmImport = async () => {
     if (!importPreview) return;
     setImporting(true);
+    setImportProgress({ total: importPreview.parsed.valid.length, current: 0 });
     try {
-      const result = await commitProducts(importPreview.parsed.valid);
+      const result = await commitProducts(importPreview.parsed.valid, (p) => {
+        setImportProgress(p);
+      });
       toast.success(`Imported ${result.imported} products${importPreview.parsed.duplicates ? ` (${importPreview.parsed.duplicates} duplicate rows skipped)` : ""}`);
       setImportPreview(null);
       if (onRefresh) onRefresh();
@@ -198,6 +197,7 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
       toast.error(err.message || "Import failed");
     } finally {
       setImporting(false);
+      setImportProgress({ total: 0, current: 0 });
     }
   };
 
@@ -305,7 +305,7 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
                   className="px-3 py-2 rounded-[12px] border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[200px]"
                 >
                   <option value="">— None —</option>
-                  {options[`${fieldTarget}s`].map((o) => (
+                  {(fieldTarget === "category" ? categories : fieldTarget === "brand" ? brands : collections).map((o) => (
                     <option key={o.id} value={o.id}>{o.name}</option>
                   ))}
                 </select>
@@ -439,6 +439,20 @@ export function TableToolbar({ selectedIds, products, allProducts = [], onRefres
               </table>
             </div>
 
+            {importing && importProgress.total > 0 && (
+              <div className="px-6 py-3 border-t border-slate-100">
+                <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                  <span>Importing {importProgress.current} of {importProgress.total}...</span>
+                  <span>{Math.round((importProgress.current / importProgress.total) * 100)}%</span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-300"
+                    style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
             <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
               <button
                 onClick={() => setImportPreview(null)}

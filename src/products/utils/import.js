@@ -107,6 +107,37 @@ export const commitProducts = async (valid, onProgress) => {
 
   if (onProgress) onProgress({ total: valid.length, current: 0 });
 
+  const [catSnap, brandSnap, collSnap] = await Promise.all([
+    getDocs(collection(db, "categories")),
+    getDocs(collection(db, "brands")),
+    getDocs(collection(db, "collections")),
+  ]);
+  const catMap = Object.fromEntries(catSnap.docs.map((d) => [d.id, d.data().name || ""]));
+  const brandMap = Object.fromEntries(brandSnap.docs.map((d) => [d.id, d.data().name || ""]));
+  const collMap = Object.fromEntries(collSnap.docs.map((d) => [d.id, d.data().name || ""]));
+
+  const buildSearch = (item) => {
+    const catName = catMap[item.categoryId || ""] || "";
+    const brandName = brandMap[item.brandId || ""] || "";
+    const collName = collMap[item.collectionId || ""] || "";
+    const collNames = collName ? [collName] : [];
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    const tokens = [
+      item.name, item.slug, item.sku, item.barcode, item.vendor,
+      ...tags, catName, brandName, ...collNames,
+      item.shortDescription,
+    ]
+      .filter(Boolean)
+      .flatMap((s) => String(s).toLowerCase().split(/[\s,-]+/))
+      .filter(Boolean);
+    return {
+      _search: [...new Set(tokens)],
+      _categoryName: catName,
+      _brandName: brandName,
+      _collectionNames: collNames,
+    };
+  };
+
   const batch = writeBatch(db);
   const now = new Date().toISOString();
   let processed = 0;
@@ -168,6 +199,8 @@ export const commitProducts = async (valid, onProgress) => {
       createdAt: existingData.createdAt || now,
       updatedAt: now,
     };
+
+    Object.assign(mergedPayload, buildSearch(mergedPayload));
 
     batch.set(ref, mergedPayload);
 
