@@ -39,6 +39,7 @@ import ActivityLogs from './pages/Admin/Settings/ActivityLogs'
 import SystemHealth from './pages/Admin/Settings/SystemHealth'
 import Developer from './pages/Admin/Settings/Developer'
 import SettingsIndex from './pages/Admin/Settings/index'
+import OrganizationManager from './pages/Admin/OrganizationManager'
 
 
 const Home = lazy(() => import('./components/Home'))
@@ -116,6 +117,7 @@ const App = () => {
                 <Route path="order" element={<Order />} />
                 <Route path="customers" element={<Customers />} />
                 <Route path="analytics" element={<Analytics />} />
+                <Route path="organization/:collection" element={<OrganizationManager />} />
                 <Route path="payment" element={<Payment />} />
                 <Route path="invoices/create" element={<CreateInvoice />} />
                 <Route path="coupons" element={<Coupons />} />

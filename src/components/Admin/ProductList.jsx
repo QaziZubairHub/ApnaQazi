@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { db } from "../../firebase";
-import { formatCurrency, parseDateValue } from "../../util/helpers";
+import { parseDateValue } from "../../util/helpers";
 import { duplicateProduct, bulkUpdateProducts } from "../../services/firebase/products";
 
 import {
@@ -521,7 +521,6 @@ const ProductList = () => {
         onSort={handleSortClick}
         sortBy={sortBy}
         sortDir={sortDir}
-        fmtDate={fmtDate}
         onView={(id) => navigate(`/admin/product/${id}/edit`)}
         onEdit={(_id) => {}}
         onDuplicate={handleDuplicate}
@@ -629,7 +628,6 @@ const CardTable = ({
   onSort,
   sortBy,
   sortDir,
-  fmtDate,
   onView,
   onEdit,
   onDuplicate,
@@ -653,14 +651,9 @@ const CardTable = ({
                   <input type="checkbox" checked={allOnPageSelected} readOnly className="accent-primary" />
                 </button>
               </th>
-              <th className="px-4 py-3 cursor-pointer select-none" onClick={() => onSort("name")}>Product{sortIndicator("name")}</th>
-              <th className="px-4 py-3 cursor-pointer select-none" onClick={() => onSort("sku")}>SKU{sortIndicator("sku")}</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Brand</th>
-              <th className="px-4 py-3 cursor-pointer select-none" onClick={() => onSort("price")}>Price{sortIndicator("price")}</th>
-              <th className="px-4 py-3">Stock</th>
+              <th className="px-4 py-3 cursor-pointer select-none" onClick={() => onSort("name")}>Name{sortIndicator("name")}</th>
+              <th className="px-4 py-3">Slug</th>
               <th className="px-4 py-3 cursor-pointer select-none" onClick={() => onSort("status")}>Status{sortIndicator("status")}</th>
-              <th className="px-4 py-3 cursor-pointer select-none" onClick={() => onSort("updatedAt")}>Last Updated{sortIndicator("updatedAt")}</th>
               <th className="px-4 py-3 w-44">Actions</th>
             </tr>
           </thead>
@@ -672,19 +665,14 @@ const CardTable = ({
                     <div className="h-4 w-4 rounded bg-slate-100" />
                   </td>
                   <td className="px-4 py-3"><div className="h-4 w-32 rounded bg-slate-100" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-24 rounded bg-slate-100" /></td>
+                  <td className="px-4 py-3"><div className="h-4 w-32 rounded bg-slate-100" /></td>
                   <td className="px-4 py-3"><div className="h-4 w-20 rounded bg-slate-100" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-20 rounded bg-slate-100" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-16 rounded bg-slate-100" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-16 rounded bg-slate-100" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-20 rounded bg-slate-100" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-24 rounded bg-slate-100" /></td>
                   <td className="px-4 py-3"><div className="h-4 w-36 rounded bg-slate-100" /></td>
                 </tr>
               ))
             ) : products.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-6 py-12 text-center text-slate-400 text-sm">
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
                   No products found
                 </td>
               </tr>
@@ -699,28 +687,13 @@ const CardTable = ({
                       className="accent-primary"
                     />
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-[10px] bg-slate-100 overflow-hidden shrink-0">
-                        {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full" />}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-slate-800 truncate max-w-[220px]">{p.name || p.title || "—"}</div>
-                        <div className="text-xs text-slate-400 truncate max-w-[220px]">{p.slug || "—"}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{p.sku || "—"}</td>
-                  <td className="px-4 py-3 text-xs text-slate-600">{p.categoryId || "—"}</td>
-                  <td className="px-4 py-3 text-xs text-slate-600">{p.brandId || "—"}</td>
-                  <td className="px-4 py-3 font-semibold text-slate-800 text-xs">{p.price != null ? formatCurrency(p.price) : "—"}</td>
-                  <td className="px-4 py-3 text-xs text-slate-600">{p.stockQuantity != null ? p.stockQuantity : "—"}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-slate-800 truncate max-w-[220px]">{p.name || p.title || "—"}</td>
+                  <td className="px-4 py-3 text-xs text-slate-400 truncate max-w-[180px]">{p.slug || "—"}</td>
                   <td className="px-4 py-3 text-xs">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-slate-200 text-slate-700 bg-white">
                       {p.status || "draft"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{fmtDate(p.updatedAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
                       <button onClick={() => onView(p.id)} className="w-8 h-8 rounded-[10px] flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">

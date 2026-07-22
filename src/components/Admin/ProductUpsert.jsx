@@ -23,6 +23,9 @@ import { generateJsonLd, generateMetaTags } from "../../services/seoService";
 import { useCategories } from "../../products/hooks/useCategories";
 import { useBrands } from "../../products/hooks/useBrands";
 import { useCollections } from "../../products/hooks/useCollections";
+import { EnterpriseSelect } from "../../products/components/ui/EnterpriseSelect";
+import { QuickCreateModal } from "../../products/components/ui/QuickCreateModal";
+
 
 import {
   getStorage,
@@ -90,6 +93,9 @@ const ProductUpsert = ({ mode = "create" }) => {
   });
 
   const [uploading, setUploading] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [brandModalOpen, setBrandModalOpen] = useState(false);
+  const [collectionModalOpen, setCollectionModalOpen] = useState(false);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -140,6 +146,10 @@ const ProductUpsert = ({ mode = "create" }) => {
   }, [form.name]);
 
   const onChange = (key, value) => setForm((p) => ({ ...p, [key]: value }));
+
+  const handleCategoryCreated = (id) => { onChange("categoryId", id); };
+  const handleBrandCreated = (id) => { onChange("brandId", id); };
+  const handleCollectionCreated = (id) => { onChange("collectionId", id); };
 
   const onSEOChange = (key, value) =>
     setForm((p) => ({ ...p, seo: { ...p.seo, [key]: value } }));
@@ -593,44 +603,41 @@ const ProductUpsert = ({ mode = "create" }) => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="sm:col-span-1">
-                <label className={labelClass}>Category *</label>
-                <select
-                  className={inputClass}
+              <div>
+                <label className={labelClass}>Category</label>
+                <EnterpriseSelect
+                  options={categories}
                   value={form.categoryId}
-                  onChange={(e) => onChange("categoryId", e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                  onChange={(id) => onChange("categoryId", id)}
+                  placeholder="Select category..."
+                  loading={false}
+                  emptyMessage="No categories found"
+                  onCreateNew={() => setCategoryModalOpen(true)}
+                />
               </div>
               <div>
-                <label className={labelClass}>Brand *</label>
-                <select
-                  className={inputClass}
+                <label className={labelClass}>Brand</label>
+                <EnterpriseSelect
+                  options={brands}
                   value={form.brandId}
-                  onChange={(e) => onChange("brandId", e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {brands.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
+                  onChange={(id) => onChange("brandId", id)}
+                  placeholder="Select brand..."
+                  loading={false}
+                  emptyMessage="No brands found"
+                  onCreateNew={() => setBrandModalOpen(true)}
+                />
               </div>
               <div>
-                <label className={labelClass}>Collection *</label>
-                <select
-                  className={inputClass}
+                <label className={labelClass}>Collection</label>
+                <EnterpriseSelect
+                  options={collections}
                   value={form.collectionId}
-                  onChange={(e) => onChange("collectionId", e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {collections.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                  onChange={(id) => onChange("collectionId", id)}
+                  placeholder="Select collection..."
+                  loading={false}
+                  emptyMessage="No collections found"
+                  onCreateNew={() => setCollectionModalOpen(true)}
+                />
               </div>
             </div>
 
@@ -645,6 +652,28 @@ const ProductUpsert = ({ mode = "create" }) => {
               </div>
             </div>
           </section>
+
+          <QuickCreateModal
+            isOpen={categoryModalOpen}
+            onClose={() => setCategoryModalOpen(false)}
+            collectionName="categories"
+            title="Create Category"
+            onCreated={handleCategoryCreated}
+          />
+          <QuickCreateModal
+            isOpen={brandModalOpen}
+            onClose={() => setBrandModalOpen(false)}
+            collectionName="brands"
+            title="Create Brand"
+            onCreated={handleBrandCreated}
+          />
+          <QuickCreateModal
+            isOpen={collectionModalOpen}
+            onClose={() => setCollectionModalOpen(false)}
+            collectionName="collections"
+            title="Create Collection"
+            onCreated={handleCollectionCreated}
+          />
 
           <section className="rounded-[16px] border border-slate-200 bg-white p-5">
             <div className="flex items-center justify-between mb-4">
