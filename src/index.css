@@ -244,3 +244,58 @@ img, video {
   --color-success: #10B981;
   --color-danger: #EF4444;
 }
+
+/*
+ * Professional Enterprise Custom Scrollbar
+ * Applied globally to all scrollable containers (Sidebar, Dashboard,
+ * Product Management, Orders, Customers, Analytics, Settings, Tables,
+ * Modal bodies, Scrollable dropdowns, etc.)
+ * WebKit / Chromium (::webkit-scrollbar) + Firefox (scrollbar-width, scrollbar-color) support.
+ */
+
+:root {
+  --scrollbar-size: 8px;
+  --scrollbar-track-bg: #f8fafc;
+  --scrollbar-thumb-bg: rgba(91, 61, 245, 0.55);   /* Website brand primary (#5B3DF5) at 55% opacity */
+  --scrollbar-thumb-hover: rgba(91, 61, 245, 0.9); /* Brighter/vibrant brand primary on hover */
+  --scrollbar-thumb-active: #482cd4;               /* Active brand color */
+}
+
+/* Chromium / WebKit (Chrome, Edge, Safari, Opera) */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-bg);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb-bg);
+  border-radius: 9999px;
+  border: 2px solid var(--scrollbar-track-bg); /* Elegant inset thumb without layout shift */
+  background-clip: padding-box;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--scrollbar-thumb-active);
+}
+
+/* Firefox (Gecko) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(91, 61, 245, 0.55) #f8fafc;
+}
+
+/* Smooth Scrolling & Prevent unwanted layout horizontal scroll */
+html {
+  scroll-behavior: smooth;
+}
+

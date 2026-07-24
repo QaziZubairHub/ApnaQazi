@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Eye, Pencil, Copy, Archive, Trash2, Package, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { formatCurrency, formatDate, getImageUrl } from "../../../util/helpers";
+import { formatCurrency, formatDate, formatProductNameOnly } from "../../../util/helpers";
 import Badge from "../../../components/ui/Badge";
 import { bulkDeleteProducts, duplicateProduct, updateProduct } from "../../../services/firebase/products";
 import { logAuditEvent } from "../../../services/audit";
@@ -299,24 +299,8 @@ export function ProductsTable({
                         />
                       </td>
                       <td className={`px-3 ${densityClass}`} style={{ width: columnWidths.name }}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-[10px] bg-slate-100 overflow-hidden shrink-0">
-                            {p.images?.[0] ? (
-                              <img src={getImageUrl(p.images[0])} alt={p.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                <Package size={14} />
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-sm font-semibold text-slate-800 truncate max-w-[180px]">
-                              {p.name || p.title || "Untitled"}
-                            </div>
-                            {p.slug && (
-                              <div className="text-[11px] text-slate-400 truncate max-w-[180px]">/{p.slug}</div>
-                            )}
-                          </div>
+                        <div className="text-sm font-semibold text-slate-800 truncate max-w-[180px]">
+                          {formatProductNameOnly(p)}
                         </div>
                       </td>
                       <td className={`px-3 ${densityClass} text-xs text-slate-600`} style={{ width: columnWidths.sku }}>{p.sku || "—"}</td>

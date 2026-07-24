@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { db } from "../../firebase";
-import { parseDateValue } from "../../util/helpers";
+import { parseDateValue, formatProductNameOnly } from "../../util/helpers";
 import { duplicateProduct, bulkUpdateProducts } from "../../services/firebase/products";
 
 import {
@@ -687,7 +687,7 @@ const CardTable = ({
                       className="accent-primary"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm font-semibold text-slate-800 truncate max-w-[220px]">{p.name || p.title || "—"}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-slate-800 truncate max-w-[220px]">{formatProductNameOnly(p)}</td>
                   <td className="px-4 py-3 text-xs text-slate-400 truncate max-w-[180px]">{p.slug || "—"}</td>
                   <td className="px-4 py-3 text-xs">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-slate-200 text-slate-700 bg-white">

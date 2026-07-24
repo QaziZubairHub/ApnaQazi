@@ -36,6 +36,7 @@ import {
   parseDateValue,
   genSlug,
   parseNumber,
+  formatProductNameOnly,
 } from "../../util/helpers";
 
 import {
@@ -1067,8 +1068,7 @@ const Products = () => {
 
                         <td className="px-4 py-3">
                           <div className="min-w-[220px]">
-                            <div className="text-sm font-semibold text-slate-800 truncate">{p.name || p.title || "—"}</div>
-                            <div className="text-xs text-slate-500 truncate">{p.slug ? `/${p.slug}` : "—"}</div>
+                            <div className="text-sm font-semibold text-slate-800 truncate">{formatProductNameOnly(p)}</div>
                           </div>
                         </td>
 

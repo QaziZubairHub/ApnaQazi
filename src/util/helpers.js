@@ -132,3 +132,26 @@ export const genSlug = (s = "") =>
 
 // Email validator
 export const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+// Clean product name to display ONLY the product name without row numbers, serial numbers, IDs, SKUs, or stock counts
+export const formatProductNameOnly = (productOrName) => {
+  if (!productOrName) return "—";
+  let nameStr = "";
+  if (typeof productOrName === "string") {
+    nameStr = productOrName;
+  } else if (typeof productOrName === "object") {
+    nameStr = productOrName.name || productOrName.title || "";
+  }
+  if (typeof nameStr !== "string") nameStr = String(nameStr);
+  
+  // Remove numeric prefixes like "1. ", "1 - ", "#1 ", "ID: 123 ", "SKU-123 ", etc.
+  let cleaned = nameStr
+    .replace(/^\s*(?:#?\d+[.:\-\s]+|\b(?:id|sku|docid|no|#)[:\s\-\d]+)/gi, "")
+    .trim();
+
+  // If cleaning stripped everything, fall back to the original trimmed string
+  if (!cleaned) cleaned = nameStr.trim();
+  
+  return cleaned || "—";
+};
+
