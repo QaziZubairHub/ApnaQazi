@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import Layout from './Layout';
 import Belt from './Belt';
+import Grocery from './Grocery';
 
 // Dynamic category route handler.
 // Navigation-only fix: keep existing UI/layout by delegating to existing category components when available.
@@ -16,6 +17,10 @@ const CategoryPage = () => {
   // This file ensures correct routing/navigation for all future categories.
   if (slug === 'belts' || slug === 'belt') {
     return <Belt />;
+  }
+
+  if (slug === 'grocery' || slug === 'grocery-products') {
+    return <Grocery />;
   }
 
   // Fallback: reuse existing category UI until other category pages are implemented.

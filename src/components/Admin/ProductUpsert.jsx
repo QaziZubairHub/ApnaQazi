@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { db } from "../../firebase";
+import { db, storage } from "../../firebase";
 import { useAuth } from "../../contexts/AuthContext";
 
 import {
@@ -28,7 +28,6 @@ import { QuickCreateModal } from "../../products/components/ui/QuickCreateModal"
 
 
 import {
-  getStorage,
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
@@ -93,6 +92,7 @@ const ProductUpsert = ({ mode = "create" }) => {
   });
 
   const [uploading, setUploading] = useState(false);
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [collectionModalOpen, setCollectionModalOpen] = useState(false);
@@ -158,7 +158,6 @@ const ProductUpsert = ({ mode = "create" }) => {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      const storage = getStorage();
       const uploaded = [];
       for (const file of files) {
         const path = `productImages/${Date.now()}-${file.name}`;
@@ -178,8 +177,11 @@ const ProductUpsert = ({ mode = "create" }) => {
         return { ...p, images: [...p.images, ...newImgs] };
       });
       toast.success(`Uploaded ${uploaded.length} image(s).`);
-    } catch {
-      toast.error("Image upload failed.");
+    } catch (err) {
+      console.error("[ProductUpsert] Image upload error:", err?.code, err?.message, err);
+      const isStorageErr = err?.code && err.code.startsWith("storage/");
+      if (isStorageErr) setStorageUnavailable(true);
+      toast.error("Image upload is unavailable because Firebase Storage is not enabled.");
     } finally {
       setUploading(false);
     }
@@ -192,12 +194,14 @@ const ProductUpsert = ({ mode = "create" }) => {
       try {
         const parts = removedUrl.split("/o/")[1]?.split("?")[0];
         if (parts) {
-          const storage = getStorage();
           const decoded = decodeURIComponent(parts);
           const ref = storageRef(storage, decoded);
           await deleteObject(ref);
         }
-      } catch { /* ignore storage errors on remove */ }
+      } catch (err) {
+        console.warn("[ProductUpsert] Could not delete image from Storage:", err?.code);
+        // Storage unavailable — silently skip server-side delete
+      }
     }
     setForm((p) => ({ ...p, images: p.images.filter((_, i) => i !== index) }));
   };
@@ -450,9 +454,13 @@ const ProductUpsert = ({ mode = "create" }) => {
                   accept="image/*"
                   className={inputClass}
                   onChange={(e) => handleImageUpload(Array.from(e.target.files || []))}
-                  disabled={uploading}
+                  disabled={uploading || storageUnavailable}
                 />
-                <p className="text-xs text-slate-500 mt-2">Images are uploaded to Firebase Storage.</p>
+                {storageUnavailable ? (
+                  <p className="text-xs text-amber-600 mt-2">Image upload is unavailable (Firebase Storage not enabled).</p>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-2">Images are uploaded to Firebase Storage.</p>
+                )}
               </div>
 
               <div>

@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../services/firebase';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 const ImageUpload = ({ label, value, onChange, folder = 'settings' }) => {
   const [uploading, setUploading] = useState(false);
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -22,8 +24,9 @@ const ImageUpload = ({ label, value, onChange, folder = 'settings' }) => {
       const url = await getDownloadURL(snapshot.ref);
       onChange(url);
     } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      console.error('Upload failed:', error?.code, error?.message, error);
+      if (error?.code && error.code.startsWith('storage/')) setStorageUnavailable(true);
+      toast.error('Image upload is unavailable because Firebase Storage is not enabled.');
     } finally {
       setUploading(false);
     }
@@ -41,10 +44,11 @@ const ImageUpload = ({ label, value, onChange, folder = 'settings' }) => {
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            className="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            disabled={uploading}
+            className="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={uploading || storageUnavailable}
           />
           {uploading && <LoadingSpinner size="sm" className="mt-2" />}
+          {storageUnavailable && <p className="text-xs text-amber-600 mt-2">Image upload is unavailable (Firebase Storage not enabled).</p>}
         </div>
       </div>
     </div>
