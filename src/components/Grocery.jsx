@@ -114,32 +114,48 @@ const ProductCard = ({ product }) => {
   );
 };
 
+const isGroceryProduct = (p) => {
+  if (String(p._categoryName || "").toLowerCase().includes("grocery")) return true;
+  if (String(p.categoryName || "").toLowerCase().includes("grocery")) return true;
+  if (String(p.category || "").toLowerCase().includes("grocery")) return true;
+  if (String(p.categorySlug || "").toLowerCase().includes("grocery")) return true;
+  if (String(p.slug || "").toLowerCase().includes("grocery")) return true;
+  if (Array.isArray(p._search) && p._search.some((t) => String(t).toLowerCase().includes("grocery"))) return true;
+  return false;
+};
+
 const Grocery = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    let cancelled = false;
+    const fetchData = async () => {
       try {
-        const productsRef = collection(db, "products");
-        const q = query(productsRef, where("status", "==", "active"));
-        const snap = await getDocs(q);
-        const allActive = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-        const categorySnap = await getDocs(
-          query(collection(db, "categories"), where("name", "==", "Grocery"))
+        console.log("[Grocery] STEP 1: Fetching active products");
+        const prodSnap = await getDocs(
+          query(collection(db, "products"), where("status", "==", "active"))
         );
-        let groceryCategoryId = null;
-        if (!categorySnap.empty) {
-          groceryCategoryId = categorySnap.docs[0].id;
-        }
+        console.log("[Grocery] STEP 2: Products retrieved:", prodSnap.size);
 
-        const filtered = allActive.filter((p) => {
-          if (p._categoryName === "Grocery") return true;
-          if (groceryCategoryId && p.categoryId === groceryCategoryId) return true;
-          if (p.categoryName === "Grocery") return true;
-          return false;
+        if (cancelled) return;
+
+        const allProducts = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+        console.log("[Grocery] STEP 3: Filtering products by grocery fields");
+        const filtered = allProducts.filter((p) => {
+          const passed = isGroceryProduct(p);
+          console.log(
+            "[Grocery] Product:", p.name,
+            "| _categoryName:", p._categoryName,
+            "| categoryName:", p.categoryName,
+            "| category:", p.category,
+            "|", passed ? "ACCEPTED" : "REJECTED"
+          );
+          return passed;
         });
+
+        console.log("[Grocery] STEP 4: Products after filtering:", filtered.length);
 
         const mapped = filtered.map((p) => {
           const firstImg = Array.isArray(p.images) && p.images.length > 0
@@ -162,15 +178,20 @@ const Grocery = () => {
           };
         });
 
+        console.log("[Grocery] STEP 5: Mapped products:", mapped.length);
+
         setProducts(mapped);
       } catch (err) {
-        console.error("[Grocery] Failed to load products:", err);
+        console.error("[Grocery] Error:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          console.log("[Grocery] STEP 6: Render complete");
+        }
       }
     };
-
-    fetchProducts();
+    fetchData();
+    return () => { cancelled = true; };
   }, []);
 
   return (

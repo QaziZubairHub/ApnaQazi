@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { db, storage } from "../../firebase";
+import { db } from "../../firebase";
 import { useAuth } from "../../contexts/AuthContext";
 
 import {
@@ -23,11 +23,9 @@ import { generateJsonLd, generateMetaTags } from "../../services/seoService";
 import { useCategories } from "../../products/hooks/useCategories";
 import { useBrands } from "../../products/hooks/useBrands";
 import { useCollections } from "../../products/hooks/useCollections";
-import { EnterpriseSelect } from "../../products/components/ui/EnterpriseSelect";
-import { QuickCreateModal } from "../../products/components/ui/QuickCreateModal";
-
 
 import {
+  getStorage,
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
@@ -92,10 +90,6 @@ const ProductUpsert = ({ mode = "create" }) => {
   });
 
   const [uploading, setUploading] = useState(false);
-  const [storageUnavailable, setStorageUnavailable] = useState(false);
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [brandModalOpen, setBrandModalOpen] = useState(false);
-  const [collectionModalOpen, setCollectionModalOpen] = useState(false);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -147,10 +141,6 @@ const ProductUpsert = ({ mode = "create" }) => {
 
   const onChange = (key, value) => setForm((p) => ({ ...p, [key]: value }));
 
-  const handleCategoryCreated = (id) => { onChange("categoryId", id); };
-  const handleBrandCreated = (id) => { onChange("brandId", id); };
-  const handleCollectionCreated = (id) => { onChange("collectionId", id); };
-
   const onSEOChange = (key, value) =>
     setForm((p) => ({ ...p, seo: { ...p.seo, [key]: value } }));
 
@@ -158,6 +148,7 @@ const ProductUpsert = ({ mode = "create" }) => {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
+      const storage = getStorage();
       const uploaded = [];
       for (const file of files) {
         const path = `productImages/${Date.now()}-${file.name}`;
@@ -177,11 +168,8 @@ const ProductUpsert = ({ mode = "create" }) => {
         return { ...p, images: [...p.images, ...newImgs] };
       });
       toast.success(`Uploaded ${uploaded.length} image(s).`);
-    } catch (err) {
-      console.error("[ProductUpsert] Image upload error:", err?.code, err?.message, err);
-      const isStorageErr = err?.code && err.code.startsWith("storage/");
-      if (isStorageErr) setStorageUnavailable(true);
-      toast.error("Image upload is unavailable because Firebase Storage is not enabled.");
+    } catch {
+      toast.error("Image upload failed.");
     } finally {
       setUploading(false);
     }
@@ -194,14 +182,12 @@ const ProductUpsert = ({ mode = "create" }) => {
       try {
         const parts = removedUrl.split("/o/")[1]?.split("?")[0];
         if (parts) {
+          const storage = getStorage();
           const decoded = decodeURIComponent(parts);
           const ref = storageRef(storage, decoded);
           await deleteObject(ref);
         }
-      } catch (err) {
-        console.warn("[ProductUpsert] Could not delete image from Storage:", err?.code);
-        // Storage unavailable — silently skip server-side delete
-      }
+      } catch { /* ignore storage errors on remove */ }
     }
     setForm((p) => ({ ...p, images: p.images.filter((_, i) => i !== index) }));
   };
@@ -454,13 +440,9 @@ const ProductUpsert = ({ mode = "create" }) => {
                   accept="image/*"
                   className={inputClass}
                   onChange={(e) => handleImageUpload(Array.from(e.target.files || []))}
-                  disabled={uploading || storageUnavailable}
+                  disabled={uploading}
                 />
-                {storageUnavailable ? (
-                  <p className="text-xs text-amber-600 mt-2">Image upload is unavailable (Firebase Storage not enabled).</p>
-                ) : (
-                  <p className="text-xs text-slate-500 mt-2">Images are uploaded to Firebase Storage.</p>
-                )}
+                <p className="text-xs text-slate-500 mt-2">Images are uploaded to Firebase Storage.</p>
               </div>
 
               <div>
@@ -611,41 +593,44 @@ const ProductUpsert = ({ mode = "create" }) => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className={labelClass}>Category</label>
-                <EnterpriseSelect
-                  options={categories}
+              <div className="sm:col-span-1">
+                <label className={labelClass}>Category *</label>
+                <select
+                  className={inputClass}
                   value={form.categoryId}
-                  onChange={(id) => onChange("categoryId", id)}
-                  placeholder="Select category..."
-                  loading={false}
-                  emptyMessage="No categories found"
-                  onCreateNew={() => setCategoryModalOpen(true)}
-                />
+                  onChange={(e) => onChange("categoryId", e.target.value)}
+                >
+                  <option value="">Select…</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className={labelClass}>Brand</label>
-                <EnterpriseSelect
-                  options={brands}
+                <label className={labelClass}>Brand *</label>
+                <select
+                  className={inputClass}
                   value={form.brandId}
-                  onChange={(id) => onChange("brandId", id)}
-                  placeholder="Select brand..."
-                  loading={false}
-                  emptyMessage="No brands found"
-                  onCreateNew={() => setBrandModalOpen(true)}
-                />
+                  onChange={(e) => onChange("brandId", e.target.value)}
+                >
+                  <option value="">Select…</option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className={labelClass}>Collection</label>
-                <EnterpriseSelect
-                  options={collections}
+                <label className={labelClass}>Collection *</label>
+                <select
+                  className={inputClass}
                   value={form.collectionId}
-                  onChange={(id) => onChange("collectionId", id)}
-                  placeholder="Select collection..."
-                  loading={false}
-                  emptyMessage="No collections found"
-                  onCreateNew={() => setCollectionModalOpen(true)}
-                />
+                  onChange={(e) => onChange("collectionId", e.target.value)}
+                >
+                  <option value="">Select…</option>
+                  {collections.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -660,28 +645,6 @@ const ProductUpsert = ({ mode = "create" }) => {
               </div>
             </div>
           </section>
-
-          <QuickCreateModal
-            isOpen={categoryModalOpen}
-            onClose={() => setCategoryModalOpen(false)}
-            collectionName="categories"
-            title="Create Category"
-            onCreated={handleCategoryCreated}
-          />
-          <QuickCreateModal
-            isOpen={brandModalOpen}
-            onClose={() => setBrandModalOpen(false)}
-            collectionName="brands"
-            title="Create Brand"
-            onCreated={handleBrandCreated}
-          />
-          <QuickCreateModal
-            isOpen={collectionModalOpen}
-            onClose={() => setCollectionModalOpen(false)}
-            collectionName="collections"
-            title="Create Collection"
-            onCreated={handleCollectionCreated}
-          />
 
           <section className="rounded-[16px] border border-slate-200 bg-white p-5">
             <div className="flex items-center justify-between mb-4">
