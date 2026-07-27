@@ -1,12 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import Card from '../ui/Card';
 
-const ProductVariantForm = ({ variants = [], onChange }) => {
+const ProductVariantForm = ({ variants = [], onChange, onAttributesChange }) => {
   const [attributes, setAttributes] = useState([
     { name: 'Color', values: ['Red', 'Blue', 'Green'] },
     { name: 'Size', values: ['S', 'M', 'L', 'XL'] },
   ]);
+
+  useEffect(() => {
+    if (onAttributesChange) {
+      const payload = attributes
+        .filter((a) => a.name && Array.isArray(a.values) && a.values.some(Boolean))
+        .map((a) => ({
+          attribute: a.name,
+          values: a.values.filter(Boolean),
+        }));
+      onAttributesChange(payload);
+    }
+  }, [attributes]);
 
   const generateMatrix = () => {
     if (attributes.length === 0) return [];

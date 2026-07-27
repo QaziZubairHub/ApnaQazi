@@ -86,6 +86,7 @@ const ProductUpsert = ({ mode = "create" }) => {
 
     images: [], // image URLs
     variants: [],
+    variantAttributes: [],
     createdAt: "",
   });
 
@@ -122,6 +123,7 @@ const ProductUpsert = ({ mode = "create" }) => {
           },
           images: normalizeImages(data?.images),
           variants: Array.isArray(data?.variants) ? data.variants : [],
+          variantAttributes: Array.isArray(data?.variantAttributes) ? data.variantAttributes : [],
           createdAt: data?.createdAt || "",
         }));
       } catch {
@@ -292,6 +294,7 @@ const ProductUpsert = ({ mode = "create" }) => {
 
         images: Array.isArray(form.images) ? form.images : [],
         variants: Array.isArray(form.variants) ? form.variants : [],
+        variantAttributes: Array.isArray(form.variantAttributes) ? form.variantAttributes : [],
 
         stockQuantity: Number(form.stock.quantity) || 0,
         lowStockThreshold: Number(form.stock.lowStockThreshold) || 0,
@@ -656,6 +659,7 @@ const ProductUpsert = ({ mode = "create" }) => {
             <ProductVariantForm
               variants={form.variants}
               onChange={(variants) => onChange("variants", variants)}
+              onAttributesChange={(attrs) => onChange("variantAttributes", attrs)}
             />
           </section>
         </div>
