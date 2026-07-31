@@ -29,20 +29,14 @@ const socialLinks = [
 
 const Layout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isHeaderSolid, setIsHeaderSolid] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
     const [navTop, setNavTop] = useState(40);
     const location = useLocation();
 
     useEffect(() => {
-        const isHomePage = location.pathname === '/';
-
         const handleHeaderStyle = () => {
             const scrolled = window.scrollY;
-            if (isHomePage) {
-                setIsHeaderSolid(scrolled > 40);
-            } else {
-                setIsHeaderSolid(true);
-            }
+            setIsScrolled(scrolled > 40);
             setNavTop(Math.max(0, 40 - scrolled));
         };
 
@@ -55,7 +49,7 @@ const Layout = ({ children }) => {
             window.removeEventListener('scroll', handleHeaderStyle);
             window.removeEventListener('resize', handleHeaderStyle);
         };
-    }, [location.pathname]);
+    }, []);
 
     const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -85,9 +79,9 @@ const Layout = ({ children }) => {
                     transition: 'background-color 300ms ease-in-out, border-color 300ms ease-in-out, box-shadow 300ms ease-in-out, backdrop-filter 300ms ease-in-out',
                 }}
                 className={`fixed left-0 right-0 w-full z-50 ${
-                    isHeaderSolid
-                        ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-                        : 'bg-transparent border-b border-transparent'
+                    isScrolled
+                        ? 'bg-transparent border-b border-transparent'
+                        : 'bg-white/10 backdrop-blur-md border-b border-white/10'
                 }`}
             >
                 <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-4 md:px-6 relative h-[72px]">
@@ -227,7 +221,7 @@ const Layout = ({ children }) => {
 
             {/* =========== FOOTER (Premium Styling) =========== */}
             <footer className="bg-slate-900 text-slate-300 mt-auto relative overflow-hidden">
-                <div className="max-w-[1400px] mx-auto px-4 lg:px-10 py-10 lg:py-16">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 lg:py-16">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
 
                         {/* Brand — full width on mobile */}
