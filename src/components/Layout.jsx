@@ -27,27 +27,23 @@ const socialLinks = [
     { label: 'YouTube', href: '#', icon: 'ri-youtube-fill', hoverClass: 'hover:bg-red-600' },
 ];
 
-const trustBadges = [
-    { icon: 'ri-shield-check-line', text: 'Secure Checkout' },
-    { icon: 'ri-truck-line', text: 'Free Delivery' },
-    { icon: 'ri-refresh-line', text: 'Easy Returns' },
-    { icon: 'ri-customer-service-2-line', text: '24/7 Support' },
-];
-
 const Layout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isHeaderSolid, setIsHeaderSolid] = useState(false);
+    const [navTop, setNavTop] = useState(40);
     const location = useLocation();
 
     useEffect(() => {
         const isHomePage = location.pathname === '/';
 
         const handleHeaderStyle = () => {
+            const scrolled = window.scrollY;
             if (isHomePage) {
-                setIsHeaderSolid(window.scrollY > 40);
+                setIsHeaderSolid(scrolled > 40);
             } else {
                 setIsHeaderSolid(true);
             }
+            setNavTop(Math.max(0, 40 - scrolled));
         };
 
         handleHeaderStyle();
@@ -84,13 +80,17 @@ const Layout = ({ children }) => {
 
             {/* =========== MAIN NAVBAR (Glassmorphism) =========== */}
             <nav
-                className={`sticky top-0 left-0 w-full z-40 transition-all duration-300 ease-in-out ${
+                style={{
+                    top: `${navTop}px`,
+                    transition: 'background-color 300ms ease-in-out, border-color 300ms ease-in-out, box-shadow 300ms ease-in-out, backdrop-filter 300ms ease-in-out',
+                }}
+                className={`fixed left-0 right-0 w-full z-50 ${
                     isHeaderSolid
                         ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-                        : 'bg-white/80 backdrop-blur-md border-b border-transparent'
+                        : 'bg-transparent border-b border-transparent'
                 }`}
             >
-                <div className="max-w-[1400px] mx-auto flex items-center justify-between py-4 px-4 lg:px-10 relative h-[72px]">
+                <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-4 md:px-6 relative h-[72px]">
                     {/* --- 1. LEFT: Hamburger & Desktop Links --- */}
                     <div className="flex-1 flex justify-start items-center gap-8">
                         <button
@@ -221,28 +221,12 @@ const Layout = ({ children }) => {
             <FloatingWhatsApp />
 
             {/* =========== Main Content =========== */}
-            <main className="flex-1">
+            <main className={`flex-1 ${location.pathname === '/' ? '-mt-[73px]' : 'pt-[73px]'}`}>
                 {children}
             </main>
 
             {/* =========== FOOTER (Premium Styling) =========== */}
             <footer className="bg-slate-900 text-slate-300 mt-auto relative overflow-hidden">
-                {/* Trust badges strip */}
-                <div className="border-b border-slate-800/60">
-                    <div className="max-w-[1400px] mx-auto px-4 lg:px-10 py-8">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {trustBadges.map((badge, idx) => (
-                                <div key={badge.text} className={`flex items-center gap-3 reveal reveal-delay-${idx + 1}`}>
-                                    <div className="w-11 h-11 rounded-xl bg-[#c79864]/10 flex items-center justify-center text-[#c79864] text-lg flex-shrink-0">
-                                        <i className={badge.icon}></i>
-                                    </div>
-                                    <span className="text-sm font-semibold text-slate-200">{badge.text}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
                 <div className="max-w-[1400px] mx-auto px-4 lg:px-10 py-10 lg:py-16">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
 
