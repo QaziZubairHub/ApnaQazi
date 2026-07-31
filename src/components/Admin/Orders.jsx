@@ -316,7 +316,11 @@ const Orders = () => {
                     <div key={idx} className="flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-0">
                       <div>
                         <p className="text-sm font-medium text-slate-800">{item.name}</p>
-                        <p className="text-xs text-slate-400">{item.variant || ""} × {item.quantity}</p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                          <span>Color: <span className="text-slate-700 font-medium">{item.selectedColor || item.color || "—"}</span></span>
+                          <span>Size: <span className="text-slate-700 font-medium">{item.selectedSize || item.size || "—"}</span></span>
+                          <span>Qty: <span className="text-slate-700 font-medium">{item.quantity}</span></span>
+                        </div>
                       </div>
                       <p className="text-sm font-semibold text-slate-800">{formatCurrency(item.lineTotal || item.price * item.quantity)}</p>
                     </div>

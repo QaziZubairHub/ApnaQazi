@@ -258,7 +258,13 @@ const Cart = () => {
                               <span>
                                 Color:{" "}
                                 <span className="text-gray-700 font-medium">
-                                  {item.color}
+                                  {item.color || item.selectedColor || "—"}
+                                </span>
+                              </span>
+                              <span>
+                                Size:{" "}
+                                <span className="text-gray-700 font-medium">
+                                  {item.size || item.selectedSize || "—"}
                                 </span>
                               </span>
                               <span className="flex items-center gap-0.5 text-amber-500">

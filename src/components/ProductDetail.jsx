@@ -3,17 +3,40 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import Layout from "./Layout";
-import { beltProducts } from "./products.js";
 import { useCart } from "../contexts/CartContext";
-import pamper1 from "../assets/pamper 1.png";
-import pamper2 from "../assets/pamper 2.png";
-import pamper3 from "../assets/pamper 3.png";
-import pamper4 from "../assets/pamper 4.png";
-import pamper5 from "../assets/pamper 5.png";
-import pamper6 from "../assets/pamper 6.png";
 import { extractVariants } from "./shared/extractVariants";
 
-const FALLBACK_IMAGES = [pamper1, pamper2, pamper3, pamper4, pamper5, pamper6];
+const CATEGORY_FALLBACK_IMAGES = {
+  belts: ['belt11', 'belt12', 'belt13', 'beltcover1', 'belt14', 'belt15'],
+  grocery: ['pamper 1', 'pamper 2', 'pamper 3', 'pamper 4', 'pamper 5', 'pamper 6'],
+  watches: ['Watches', 'Watches.1', 'Watches.2', 'Watches.3', 'Watches.4'],
+  sunglasses: ['Sunglass', 'Sunglass.1', 'Sunglass.2'],
+  jewellery: ['Necklaces1', 'Jewellery', 'earingset', 'ring'],
+  clothing: ['Cloth1', 'Cloth2', 'Cloth3', 'Cloth4'],
+  default: ['GENERIC', 'hero', 'fashion-sales', 'coverbgblack'],
+};
+
+const loadFallbackImage = (name) => {
+  try {
+    return require(`../assets/${name}.png`).default || require(`../assets/${name}.png`);
+  } catch {
+    try {
+      return require(`../assets/${name}.jpg`).default || require(`../assets/${name}.jpg`);
+    } catch {
+      try {
+        return require(`../assets/${name}.jpeg`).default || require(`../assets/${name}.jpeg`);
+      } catch {
+        return null;
+      }
+    }
+  }
+};
+
+const getFallbackImages = (category) => {
+  const key = (category || '').toLowerCase();
+  const names = CATEGORY_FALLBACK_IMAGES[key] || CATEGORY_FALLBACK_IMAGES.default;
+  return names.map(loadFallbackImage).filter(Boolean);
+};
 
 const formatPrice = (value) => `Rs. ${value.toLocaleString('en-PK')}`;
 
@@ -53,12 +76,9 @@ const extractValue = (data, keys, fallback) => {
   return fallback;
 };
 
-const mapFirestoreProduct = (id, data) => {
+const mapFirestoreProduct = (id, data, fallbackImages) => {
   const v = extractVariants(data);
-  const images = v.images.length > 0 ? v.images : [...FALLBACK_IMAGES];
-  console.log("[ProductPage] images:", images);
-  console.log("[ProductPage] colors:", v.colors);
-  console.log("[ProductPage] sizes:", v.sizes);
+  const images = v.images.length > 0 ? v.images : [...fallbackImages];
   return {
     id,
     title: data.name || "Product",
@@ -79,7 +99,7 @@ const mapFirestoreProduct = (id, data) => {
   };
 };
 
-const BeltProductPage = () => {
+const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -103,10 +123,10 @@ const BeltProductPage = () => {
       setQuantity(1);
       setOpenTab("description");
 
-      const staticProduct = beltProducts.find(p => p.id === parseInt(id));
+      const staticProduct = window.__BELT_PRODUCTS__?.find(p => p.id === parseInt(id));
       if (staticProduct) {
         const images = [staticProduct.image, staticProduct.hoverImage, ...(staticProduct.gallery || [])].filter(Boolean);
-        const p = { ...staticProduct, gallery: images.length > 0 ? images : FALLBACK_IMAGES, stockQuantity: 10, tags: [], colors: staticProduct.colors || [] };
+        const p = { ...staticProduct, gallery: images.length > 0 ? images : getFallbackImages('belts'), stockQuantity: 10, tags: [], colors: staticProduct.colors || [] };
         setProduct(p);
         setSelectedSize(p.availableSizes?.[0] || "");
         const cols = p.colors?.length ? p.colors : fallbackColors;
@@ -121,7 +141,8 @@ const BeltProductPage = () => {
 
         if (snap.exists()) {
           const data = snap.data();
-          const mapped = mapFirestoreProduct(snap.id, data);
+          const fallbackImages = getFallbackImages(data._categoryName || data.categoryName || data.category);
+          const mapped = mapFirestoreProduct(snap.id, data, fallbackImages);
           setProduct(mapped);
           const av = mapped.availableSizes;
           setSelectedSize(av?.length > 0 ? av[0] : "Default");
@@ -135,18 +156,22 @@ const BeltProductPage = () => {
                 query(collection(db, "products"), where("status", "==", "active"), where("_categoryName", "==", catName))
               );
               if (!cancelled) {
-                const related = relatedSnap.docs.filter((d) => d.id !== snap.id).slice(0, 4).map((d) => mapFirestoreProduct(d.id, d.data()));
+                const related = relatedSnap.docs.filter((d) => d.id !== snap.id).slice(0, 4).map((d) => {
+                  const rd = d.data();
+                  const rFallbacks = getFallbackImages(rd._categoryName || rd.categoryName || rd.category);
+                  return mapFirestoreProduct(d.id, rd, rFallbacks);
+                });
                 setRelatedProducts(related);
               }
             } catch (e) {
-              console.warn("[ProductPage] Could not load related products:", e.message);
+              console.warn("[ProductDetail] Could not load related products:", e.message);
             }
           }
         } else {
           setProduct(null);
         }
       } catch (err) {
-        console.error("[ProductPage] Error fetching product:", err);
+        console.error("[ProductDetail] Error fetching product:", err);
         setProduct(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -250,9 +275,7 @@ const BeltProductPage = () => {
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12 overflow-x-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
 
-          {/* ===================== LEFT SIDE: IMAGE GALLERY ===================== */}
           <div className="flex flex-col-reverse md:flex-row gap-3 sm:gap-4">
-
             {productImages.length > 1 && (
               <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto md:max-h-[600px] md:pr-2 hide-scrollbar">
                 {productImages.map((img, index) => (
@@ -283,9 +306,7 @@ const BeltProductPage = () => {
             </div>
           </div>
 
-          {/* ===================== RIGHT SIDE: PRODUCT DETAILS ===================== */}
           <div className="flex flex-col">
-
             <div className="text-xs text-gray-500 mb-4 tracking-wide">
               <Link to="/" className="hover:text-black">Home</Link>
               <span className="mx-1">/</span>
@@ -317,7 +338,6 @@ const BeltProductPage = () => {
               {product.description}
             </p>
 
-            {/* COLOR SELECTION */}
             {hasColors && (
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
@@ -346,7 +366,6 @@ const BeltProductPage = () => {
               </div>
             )}
 
-            {/* SIZE SELECTION */}
             {hasSizes && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3 w-max gap-4">
@@ -369,7 +388,6 @@ const BeltProductPage = () => {
               </div>
             )}
 
-            {/* STOCK STATUS */}
             <div className={`flex items-center gap-2 mb-6 text-sm font-medium ${inStock ? "text-green-600" : "text-red-500"}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={inStock ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
@@ -377,7 +395,6 @@ const BeltProductPage = () => {
               {inStock ? "In Stock" : "Out of Stock"}
             </div>
 
-            {/* CART BUTTONS */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
               <div className="flex border border-gray-300 rounded-md overflow-hidden self-start">
                 <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="px-4 text-gray-600 hover:bg-gray-100 transition">-</button>
@@ -415,7 +432,6 @@ const BeltProductPage = () => {
               )}
             </div>
 
-            {/* ACCORDION */}
             <div className="mt-6">
               <div className="border-b border-gray-200">
                 {productDetailsTabs.map((tab) => {
@@ -444,7 +460,6 @@ const BeltProductPage = () => {
                 })}
               </div>
 
-              {/* Share Section */}
               <div className="flex items-center mt-6 mb-2">
                 <span className="text-sm font-semibold text-gray-800 mr-4">Share:</span>
                 <div className="flex items-center gap-3">
@@ -460,7 +475,6 @@ const BeltProductPage = () => {
           </div>
         </div>
 
-        {/* RELATED PRODUCTS */}
         {relatedProducts && relatedProducts.length > 0 && (
           <section className="mt-16 pt-8 border-t border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
@@ -486,4 +500,4 @@ const BeltProductPage = () => {
   );
 };
 
-export default BeltProductPage;
+export default ProductDetail;

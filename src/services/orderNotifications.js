@@ -23,7 +23,18 @@ const formatOrderMessage = (order) => {
 const selectedProductsText = (order) => {
   const items = order.orderItems || [];
   if (!items.length) return "No items";
-  return items.map((item) => `${item.name} x${item.quantity}`).join(", ");
+  return items.map((item) => {
+    const color = item.selectedColor || item.color || "—";
+    const size = item.selectedSize || item.size || "—";
+    return [
+      `Product: ${item.name}`,
+      `Color: ${color}`,
+      `Size: ${size}`,
+      `Qty: ${item.quantity}`,
+      `Price: Rs. ${item.price?.toLocaleString?.('en-PK') || item.price}`,
+      `Subtotal: Rs. ${(item.lineTotal || item.price * item.quantity)?.toLocaleString?.('en-PK') || (item.lineTotal || item.price * item.quantity)}`,
+    ].join("\n");
+  }).join("\n\n");
 };
 
 const normalizeLog = (status, detail) => ({ status, detail, createdAt: new Date().toISOString() });

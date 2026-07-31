@@ -282,6 +282,8 @@ const Checkout = () => {
         price: +i.price.toFixed(2),
         quantity: i.qty,
         lineTotal: +(i.price * i.qty).toFixed(2),
+        selectedColor: i.color || i.selectedColor || "",
+        selectedSize: i.size || i.selectedSize || "",
       })),
       paymentInfo: {
         method: paymentMethodLabel,

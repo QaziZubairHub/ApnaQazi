@@ -13,6 +13,7 @@ export const beltProductToCartItem = (product, { size, qty = 1 }) => ({
   productId: product.id,
   name: product.title,
   color: `Size ${size}`,
+  selectedColor: `Size ${size}`,
   brand: product.category,
   rating: product.rating,
   reviews: product.reviews,
@@ -24,6 +25,7 @@ export const beltProductToCartItem = (product, { size, qty = 1 }) => ({
   delivery: "3-5 business days",
   saved: false,
   size,
+  selectedSize: size,
   sku: product.sku,
   variant: `Size ${size} / ${product.sku}`,
 });
