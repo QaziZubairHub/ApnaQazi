@@ -190,7 +190,7 @@ const Home = () => {
       {/* ====================== Feature Bar ========================== */}
       <section className="bg-white border-b border-gray-100 shadow-sm relative z-10">
         <div className="w-full mx-auto px-2 md:px-6 py-2 md:py-5">
-          <div className="grid grid-cols-4 gap-1 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
             {features.map((f) => (
               <div key={f.id} className="flex flex-col items-center text-center md:flex-row md:items-center md:text-left gap-1 md:gap-3 px-1 py-2 md:px-4 md:py-4 rounded-xl bg-gray-50 hover:bg-[#fdf6ec] transition-all duration-300 group hover:shadow-md min-w-0">
                 <div className="flex-shrink-0 w-8 h-8 md:w-11 md:h-11 rounded-full bg-[#c79864]/10 flex items-center justify-center text-[18px] md:text-[22px] group-hover:scale-110 transition-transform">

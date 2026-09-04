@@ -6,8 +6,8 @@ import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import Layout from "./Layout";
-import { ProductCard } from "./shared/ProductCard";
-import { extractVariants } from "./shared/extractVariants";
+import { ProductCard } from "../shared/ProductCard";
+import { extractVariants } from "../shared/extractVariants";
 
 import groceryHero1 from "../assets/Groceryimage.png";
 import groceryHero2 from "../assets/shopinggro.jpg";

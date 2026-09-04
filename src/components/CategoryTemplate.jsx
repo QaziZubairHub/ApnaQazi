@@ -7,7 +7,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { ProductCard } from './shared/ProductCard';
+import { ProductCard } from '../shared/ProductCard';
 
 const CATEGORY_FALLBACK_IMAGES = {
   belts: ['belt11', 'belt12', 'belt13', 'beltcover1'],
@@ -21,16 +21,18 @@ const getFallbackImages = (categorySlug) => {
   return CATEGORY_FALLBACK_IMAGES[key] || CATEGORY_FALLBACK_IMAGES.default;
 };
 
+const fallbackAssets = import.meta.glob("../assets/*.{png,jpg,jpeg}", {
+  eager: true,
+  import: "default",
+});
+
 const loadImage = (name) => {
-  try {
-    return require(`../assets/${name}.png`).default || require(`../assets/${name}.png`);
-  } catch {
-    try {
-      return require(`../assets/${name}.jpg`).default || require(`../assets/${name}.jpg`);
-    } catch {
-      return null;
-    }
-  }
+  return (
+    fallbackAssets[`../assets/${name}.png`] ||
+    fallbackAssets[`../assets/${name}.jpg`] ||
+    fallbackAssets[`../assets/${name}.jpeg`] ||
+    null
+  );
 };
 
 const CategoryTemplate = () => {

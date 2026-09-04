@@ -1,17 +1,16 @@
-import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import Layout from "./Layout";
-import { ProductCard } from "./shared/ProductCard";
+import { ProductCard } from "../shared/ProductCard";
 
 // Import images
 import belt11Img from "../assets/belt11.png"; 
 import belt12Img from "../assets/belt12.png"; 
 import belt13Img from "../assets/belt13.png"; 
 import beltcover1Img from "../assets/beltcover1.jpg"; 
-import { beltProducts } from "./products.js";
+import { beltProducts } from "./products";
 
 const heroSlides = [
   { id: 1, image: belt12Img, alt: "Moderne Slider Belt" }, 

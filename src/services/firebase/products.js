@@ -13,7 +13,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-import { db } from "../../../src/firebase";
+import { db } from "../../firebase";
 
 const PRODUCTS_COL = "products";
 

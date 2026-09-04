@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import FloatingWhatsApp from "./FloatingWhatsApp";
-import LoginRegister, { UserMenu } from "./Admin/Login_Register";
+import LoginRegister, { UserMenu } from "../features/admin/Login_Register";
 import { useCart } from "../contexts/CartContext";
 import { formatCurrency } from "../util/helpers";
 
 
 const menus = [
     { label: 'Home', href: '/' },
+    
     { label: 'Product', href: '/product' },
     { label: 'Category', href: '/category' },
     { label: 'Contact us', href: '/Contact us' },
@@ -215,24 +216,24 @@ const Layout = ({ children }) => {
             <FloatingWhatsApp />
 
             {/* =========== Main Content =========== */}
-            <main className={`flex-1 ${location.pathname === '/' ? '-mt-[73px]' : 'pt-[73px]'}`}>
+            <main className="flex-1 pt-[73px]">
                 {children}
             </main>
 
             {/* =========== FOOTER (Premium Styling) =========== */}
             <footer className="bg-slate-900 text-slate-300 mt-auto relative overflow-hidden">
-                <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 lg:py-16">
-                    <div className="grid grid-cols-2 lg:grid-cols-12 gap-x-8 gap-y-8">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 sm:py-10 lg:py-16">
+                    <div className="grid grid-cols-2 lg:grid-cols-12 gap-x-4 sm:gap-x-8 gap-y-6 sm:gap-y-8">
 
                         {/* Brand — full width on mobile */}
-                        <div className="col-span-2 lg:col-span-3 space-y-4 min-w-0">
+                        <div className="col-span-2 lg:col-span-3 space-y-3 sm:space-y-4 min-w-0">
                             <Link to="/" className="inline-flex group">
-                                <img src="/images/ApnaQazi_Logo_v1.png" alt="Apna Qazi" className="h-12 w-auto brightness-110 group-hover:brightness-125 transition-all duration-200" />
+                                <img src="/images/ApnaQazi_Logo_v1.png" alt="Apna Qazi" className="h-10 sm:h-12 w-auto brightness-110 group-hover:brightness-125 transition-all duration-200" />
                             </Link>
-                            <p className="text-sm text-slate-300 leading-relaxed tracking-wide">
+                            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed tracking-wide">
                                 Quality products, fair prices — delivered with care. Free delivery in Karachi on orders above PKR 5,000.
                             </p>
-                            <div className="flex items-center gap-3 text-sm text-slate-300 leading-relaxed tracking-wide">
+                            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300 leading-relaxed tracking-wide">
                                 <i className="ri-map-pin-line w-4 flex-shrink-0 text-slate-500"></i>
                                 <span>1/343 Shah Faisal Colony, Karachi</span>
                             </div>
@@ -240,17 +241,17 @@ const Layout = ({ children }) => {
 
                         {/* Quick Links */}
                         <div className="col-span-1 lg:col-span-2 min-w-0">
-                            <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-4">Quick Links</h3>
-                            <ul className="space-y-2.5">
+                            <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-3 sm:mb-4">Quick Links</h3>
+                            <ul className="space-y-2 sm:space-y-2.5">
                                 {menus.map((item) => (
                                     <li key={item.href}>
-                                        <Link to={item.href} className="text-sm text-slate-300 leading-relaxed tracking-wide hover:text-[#c79864] transition-colors duration-200">
+                                        <Link to={item.href} className="text-xs sm:text-sm text-slate-300 leading-relaxed tracking-wide hover:text-[#c79864] transition-colors duration-200 block truncate">
                                             {item.label}
                                         </Link>
                                     </li>
                                 ))}
                                 <li>
-                                    <button onClick={() => setIsAuthOpen(true)} className="text-sm text-slate-300 leading-relaxed tracking-wide hover:text-[#c79864] transition-colors duration-200">
+                                    <button onClick={() => setIsAuthOpen(true)} className="text-xs sm:text-sm text-slate-300 leading-relaxed tracking-wide hover:text-[#c79864] transition-colors duration-200 block text-left truncate">
                                         Login / Signup
                                     </button>
                                 </li>
@@ -259,15 +260,15 @@ const Layout = ({ children }) => {
 
                         {/* Contact */}
                         <div className="col-span-1 lg:col-span-3 min-w-0">
-                            <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-4">Contact</h3>
-                            <ul className="space-y-3">
+                            <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-3 sm:mb-4">Contact</h3>
+                            <ul className="space-y-2.5 sm:space-y-3">
                                 {contactItems.map((item) => (
-                                    <li key={item.label} className="flex items-center gap-3 text-sm text-slate-300 leading-relaxed tracking-wide">
-                                        <i className={`${item.icon} w-4 flex-shrink-0 text-slate-500`}></i>
+                                    <li key={item.label} className="flex items-start sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300 leading-relaxed tracking-wide">
+                                        <i className={`${item.icon} w-4 flex-shrink-0 text-slate-500 mt-0.5 sm:mt-0`}></i>
                                         {item.href ? (
-                                            <a href={item.href} className="break-words hover:text-[#c79864] transition-colors duration-200">{item.label}</a>
+                                            <a href={item.href} className="break-all hover:text-[#c79864] transition-colors duration-200 min-w-0">{item.label}</a>
                                         ) : (
-                                            <span className="break-words">{item.label}</span>
+                                            <span className="break-words min-w-0">{item.label}</span>
                                         )}
                                     </li>
                                 ))}
@@ -276,21 +277,21 @@ const Layout = ({ children }) => {
 
                         {/* Newsletter — full width on mobile */}
                         <div className="col-span-2 lg:col-span-4 min-w-0">
-                            <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-4">Newsletter</h3>
-                            <p className="text-sm text-slate-300 mb-3 leading-relaxed tracking-wide">Get updates about new arrivals and exclusive offers.</p>
+                            <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-3 sm:mb-4">Newsletter</h3>
+                            <p className="text-xs sm:text-sm text-slate-300 mb-3 leading-relaxed tracking-wide">Get updates about new arrivals and exclusive offers.</p>
                             <form className="flex flex-col sm:flex-row gap-2">
                                 <input
                                     type="email"
                                     placeholder="Your email address"
                                     required
-                                    className="flex-1 min-w-0 w-full bg-slate-800 border border-slate-700 placeholder-slate-500 text-white py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c79864]/50 transition-all text-sm tracking-wide"
+                                    className="flex-1 min-w-0 w-full bg-slate-800 border border-slate-700 placeholder-slate-500 text-white py-2.5 px-3 sm:py-3 sm:px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c79864]/50 transition-all text-xs sm:text-sm tracking-wide"
                                 />
-                                <button type="submit" className="flex-shrink-0 whitespace-nowrap bg-[#c79864] text-slate-900 font-bold px-6 py-3 rounded-lg hover:bg-[#d4a878] transition-colors duration-200 text-sm tracking-wide shadow-lg shadow-[#c79864]/20">
+                                <button type="submit" className="flex-shrink-0 whitespace-nowrap bg-[#c79864] text-slate-900 font-bold px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-[#d4a878] transition-colors duration-200 text-xs sm:text-sm tracking-wide shadow-lg shadow-[#c79864]/20">
                                     Subscribe
                                 </button>
                             </form>
-                            <div className="mt-5">
-                                <h4 className="text-xs text-slate-500 uppercase tracking-wider mb-3">Follow us</h4>
+                            <div className="mt-4 sm:mt-5">
+                                <h4 className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-wider mb-2 sm:mb-3">Follow us</h4>
                                 <div className="flex items-center gap-3">
                                     {socialLinks.map((social) => (
                                         <a

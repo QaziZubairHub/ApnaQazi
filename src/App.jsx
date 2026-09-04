@@ -4,54 +4,55 @@ import { BrowserRouter, Navigate, Routes, Route, useNavigate } from "react-route
 import { Toaster } from "react-hot-toast"
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import { CartProvider } from "./contexts/CartContext"
-import NotFound from './components/Admin/NotFound'
-import ProductsPage from './products/pages/ProductsPage'
-import Layout from './components/Admin/Layout'
-import Order from './components/Admin/Orders'
-import Dashboard from './components/Admin/Dashboard'
-import Customers from './components/Admin/Customers'
-import Payment from './components/Admin/Payment'
-import Analytics from './components/Admin/Analytics'
-import CreateInvoice from './components/Admin/CreateInvoice'
-import Coupons from './components/Admin/Coupons'
-import ProtectedRoute from './components/Admin/ProtectedRoute'
-import LoginRegister from './components/Admin/Login_Register'
+import NotFound from './features/admin/NotFound'
+import ProductsPage from './features/products/pages/ProductsPage'
+import Layout from './features/admin/Layout'
+import Order from './features/admin/Orders'
+import Dashboard from './features/admin/Dashboard'
+import Customers from './features/admin/Customers'
+import Payment from './features/admin/Payment'
+import Analytics from './features/admin/Analytics'
+import CreateInvoice from './features/admin/CreateInvoice'
+import Coupons from './features/admin/Coupons'
+import ProtectedRoute from './features/admin/ProtectedRoute'
+import LoginRegister from './features/admin/Login_Register'
 import Preloader from './components/Preloader'
 import CategoryPage from './components/CategoryPage'
-import SettingsLayout from './components/settings/SettingsLayout'
-import General from './pages/Admin/Settings/General'
-import Store from './pages/Admin/Settings/Store'
-import PaymentSettings from './pages/Admin/Settings/Payment'
-import Shipping from './pages/Admin/Settings/Shipping'
-import Email from './pages/Admin/Settings/Email'
-import WhatsApp from './pages/Admin/Settings/WhatsApp'
-import Firebase from './pages/Admin/Settings/Firebase'
-import Notifications from './pages/Admin/Settings/Notifications'
-import Invoice from './pages/Admin/Settings/Invoice'
-import SEO from './pages/Admin/Settings/SEO'
-import Appearance from './pages/Admin/Settings/Appearance'
-import Security from './pages/Admin/Settings/Security'
-import UsersRoles from './pages/Admin/Settings/UsersRoles'
-import AnalyticsSettings from './pages/Admin/Settings/Analytics'
-import BackupRestore from './pages/Admin/Settings/BackupRestore'
-import APISettings from './pages/Admin/Settings/API'
-import ActivityLogs from './pages/Admin/Settings/ActivityLogs'
-import SystemHealth from './pages/Admin/Settings/SystemHealth'
-import Developer from './pages/Admin/Settings/Developer'
-import SettingsIndex from './pages/Admin/Settings/index'
-import OrganizationManager from './pages/Admin/OrganizationManager'
+import SettingsLayout from './features/admin/settings/components/SettingsLayout'
+import General from './features/admin/settings/pages/General'
+import Store from './features/admin/settings/pages/Store'
+import PaymentSettings from './features/admin/settings/pages/Payment'
+import Shipping from './features/admin/settings/pages/Shipping'
+import Email from './features/admin/settings/pages/Email'
+import WhatsApp from './features/admin/settings/pages/WhatsApp'
+import Firebase from './features/admin/settings/pages/Firebase'
+import Notifications from './features/admin/settings/pages/Notifications'
+import Invoice from './features/admin/settings/pages/Invoice'
+import SEO from './features/admin/settings/pages/SEO'
+import Appearance from './features/admin/settings/pages/Appearance'
+import Security from './features/admin/settings/pages/Security'
+import UsersRoles from './features/admin/settings/pages/UsersRoles'
+import AnalyticsSettings from './features/admin/settings/pages/Analytics'
+import BackupRestore from './features/admin/settings/pages/BackupRestore'
+import APISettings from './features/admin/settings/pages/API'
+import ActivityLogs from './features/admin/settings/pages/ActivityLogs'
+import SystemHealth from './features/admin/settings/pages/SystemHealth'
+import Developer from './features/admin/settings/pages/Developer'
+import SettingsIndex from './features/admin/settings/pages/index'
+import OrganizationManager from './features/admin/OrganizationManager'
 
 
 const Home = lazy(() => import('./components/Home'))
 
-const Contact = lazy(() => import('./components/Contact us'))
+
+const Contact = lazy(() => import('./components/ContactPage'))
 
 const Cart = lazy(() => import('./components/Cart'))
 
 const Checkout = lazy(() => import('./components/Checkout'))
-const BeltProductPage = lazy(() => import('./components/Beltproductpage'))
-const ProductCreate = lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductCreate })))
-const ProductEdit = lazy(() => import('./components/Admin/ProductUpsert.jsx').then(m => ({ default: m.ProductEdit })))
+const BeltProductPage = lazy(() => import('./components/ProductDetailPage'))
+const ProductCreate = lazy(() => import('./features/admin/ProductUpsert').then(m => ({ default: m.ProductCreate })))
+const ProductEdit = lazy(() => import('./features/admin/ProductUpsert').then(m => ({ default: m.ProductEdit })))
 
 const AdminLoginRoute = () => {
   const navigate = useNavigate()
@@ -89,6 +90,7 @@ const App = () => {
           <Routes>
             {/* Storefront Routes */}
             <Route path="/" element={<Home />} />
+            
             <Route path="/Contact us" element={<Contact />} />
             <Route path="/Cart" element={<Cart />} />
             <Route path="/cart" element={<Navigate to="/Cart" replace />} />
